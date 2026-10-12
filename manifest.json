@@ -1,0 +1,17 @@
+{
+  "name": "Ресонс",
+  "short_name": "Ресонс",
+  "start_url": "./Resons.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#11170d",
+  "theme_color": "#2DC653",
+  "icons": [
+    { 
+      "src": "icon-512.png", 
+      "sizes": "512x512", 
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
