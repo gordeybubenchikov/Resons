@@ -1,17 +1,33 @@
 {
   "name": "Ресонс",
   "short_name": "Ресонс",
+  "description": "Ресонс — социальная сеть. Посты, чаты, корцы, видео, игры. Бесплатно, безопасно.",
   "start_url": "./Resons.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#11170d",
   "theme_color": "#2DC653",
   "icons": [
-    { 
-      "src": "icon-512.png", 
-      "sizes": "512x512", 
-      "type": "image/png",
-      "purpose": "any maskable"
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Чаты",
+      "short_name": "Чаты",
+      "url": "./Resons.html?page=chat",
+      "icons": [{ "src": "icon-512.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Корцы",
+      "short_name": "Корцы",
+      "url": "./Resons.html?page=corts",
+      "icons": [{ "src": "icon-512.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Новый пост",
+      "short_name": "Пост",
+      "url": "./Resons.html?action=create",
+      "icons": [{ "src": "icon-512.png", "sizes": "512x512" }]
     }
   ]
 }
