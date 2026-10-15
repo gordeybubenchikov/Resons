@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ресонс — Голосовые + Экран</title>
+<title>Ресонс — Чат (полный демо)</title>
 <style>
 :root{--bg:#f6fbe9;--c:#fff;--t:#22301a;--g:#2DC653;--y:#FFC300;--b:#e2ecd0;--d:#e05555}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -45,8 +45,21 @@ body{font-family:sans-serif;background:var(--bg);color:var(--t);min-height:100vh
 .screen{position:fixed;inset:0;background:#000;display:none;flex-direction:column;z-index:100}
 .screen.on{display:flex}
 .screen video{flex:1;width:100%;object-fit:contain;background:#000}
-.screen .bar2{background:#111;padding:14px;display:flex;justify-content:center;gap:14px}
+.screen .bar2{background:#111;padding:14px;display:flex;justify-content:center}
 .screen .bar2 button{background:#e05555;color:#fff;padding:12px 24px;border-radius:12px;border:none;font-size:14px;font-weight:700}
+.call{position:fixed;inset:0;background:#000;z-index:500;display:none;flex-direction:column}
+.call.on{display:flex}
+.call .bg{flex:1;display:flex;align-items:center;justify-content:center;position:relative;color:#fff}
+.call .bg .ic{font-size:80px}
+.call .bg .nm{font-size:22px;font-weight:900;margin-top:16px;text-align:center}
+.call .bg .num{font-size:34px;font-weight:900;margin-top:16px;font-variant-numeric:tabular-nums}
+.call .local{position:absolute;bottom:16px;right:16px;width:110px;height:150px;background:#222;border-radius:12px;overflow:hidden;border:2px solid #fff;display:none}
+.call .local video{width:100%;height:100%;object-fit:cover}
+.call .ctrl{background:#1a1a1a;padding:20px;display:flex;gap:16px;justify-content:center}
+.call .ctrl button{width:64px;height:64px;border-radius:50%;border:none;font-size:24px;color:#fff}
+.call .ctrl .end{background:#e05555}
+.call .ctrl .mid{background:rgba(255,255,255,.15)}
+.call .ctrl .mid.off{background:#e05555}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:20px;z-index:400;font-size:13px;max-width:80%;text-align:center}
 </style>
 </head>
@@ -56,8 +69,8 @@ body{font-family:sans-serif;background:var(--bg);color:var(--t);min-height:100vh
   <div class="ava">👨</div>
   <div class="who"><b>Папа</b><span>был(а) недавно</span></div>
   <div class="acts">
-    <button class="c1" onclick="alert('Звонок — из прошлого демо')">📞</button>
-    <button class="c2" onclick="alert('Видео — из прошлого демо')">📹</button>
+    <button class="c1" onclick="openCall(false)">📞</button>
+    <button class="c2" onclick="openCall(true)">📹</button>
     <button class="c3" onclick="startScreen()">🖥️</button>
   </div>
 </div>
@@ -104,7 +117,7 @@ function addMsg(text,who){
 
 // ==== ГОЛОСОВОЕ ====
 var mediaRec=null,chunks=[],recTimer=null,recStart=0,recStream=null;
-var audioCtx=null,analyser=null,dataArr=null,recWave=[],waveTimer=null;
+var audioCtx=null,analyser=null,dataArr=null,recWave=[];
 var recognition=null,recText='';
 
 async function startRec(){
@@ -124,8 +137,6 @@ async function startRec(){
   document.getElementById('micBtn').style.background='var(--d)';
   document.getElementById('micBtn').style.color='#fff';
   document.getElementById('micBtn').textContent='⏹';
-
-  // Анализ звука
   try{
     audioCtx=new (window.AudioContext||window.webkitAudioContext)();
     var src=audioCtx.createMediaStreamSource(recStream);
@@ -134,14 +145,11 @@ async function startRec(){
     src.connect(analyser);
     dataArr=new Uint8Array(analyser.frequencyBinCount);
   }catch(e){}
-
-  // Таймер + волна в реальном времени
   var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
   recTimer=setInterval(function(){
     var t=Math.floor((Date.now()-recStart)/1000);
     var m=Math.floor(t/60),s=t%60;
     document.getElementById('tm').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-    // Волна
     ctx.clearRect(0,0,cv.width,cv.height);
     if(analyser){
       analyser.getByteTimeDomainData(dataArr);
@@ -158,15 +166,12 @@ async function startRec(){
       ctx.fillRect(i*w,cv.height/2-h/2,Math.max(1,w-1),h);
     }
   },100);
-
-  // Транскрипция (если есть)
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(SR){
     try{
       recognition=new SR();
       recognition.lang='ru-RU';
       recognition.continuous=true;
-      recognition.interimResults=true;
       recognition.onresult=function(e){
         var t='';
         for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript+' ';
@@ -190,15 +195,12 @@ function stopRec(ok){
   if(audioCtx){try{audioCtx.close()}catch(e){}audioCtx=null;analyser=null}
   if(ok){
     var dur=(Date.now()-recStart)/1000;
-    if(dur<1){toast('Слишком коротко (мин 1 сек)');chunks=[];mediaRec.onstop=null;mediaRec.stop();recStream.getTracks().forEach(function(x){x.stop()});mediaRec=null;return}
+    if(dur<1){toast('Слишком коротко');chunks=[];mediaRec.onstop=null;mediaRec.stop();recStream.getTracks().forEach(function(x){x.stop()});mediaRec=null;return}
     mediaRec.stop();
   }else{
-    chunks=[];
-    mediaRec.onstop=null;
-    mediaRec.stop();
+    chunks=[];mediaRec.onstop=null;mediaRec.stop();
     recStream.getTracks().forEach(function(x){x.stop()});
-    mediaRec=null;
-    toast('Отменено');
+    mediaRec=null;toast('Отменено');
   }
 }
 
@@ -209,8 +211,6 @@ function finalizeRec(){
   var t=Math.floor((Date.now()-recStart)/1000);
   var m=Math.floor(t/60),s=t%60;
   var dur=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-
-  // Нормализуем волну до 60 точек
   var wave=recWave.slice();
   while(wave.length<60)wave.push(0);
   var step=Math.floor(wave.length/60);
@@ -225,10 +225,9 @@ function finalizeRec(){
   var d=document.createElement('div');
   d.className='msg me';
   var trHTML=recText?'<div class="tr">'+recText+'</div>':'';
-  d.innerHTML='<div class="voice"><button class="play" onclick="playVoice(this,\''+url+'\')">▶</button><div class="wave" id="'+id+'" data-dur="'+t+'" data-url="'+url+'" onclick="seekVoice(event,this)"><canvas width="200" height="34"></canvas></div><span class="dur">'+dur+'</span><button class="speed" onclick="cycleSpeed(this)">1x</button></div>'+trHTML+'<span class="time">только что ✓✓</span>';
+  d.innerHTML='<div class="voice"><button class="play" onclick="playVoice(this,\''+url+'\')">▶</button><div class="wave" id="'+id+'" data-url="'+url+'" data-bars="'+norm.join(',')+'" onclick="seekVoice(event,this)"><canvas width="200" height="34"></canvas></div><span class="dur">'+dur+'</span><button class="speed" onclick="cycleSpeed(this)">1x</button></div>'+trHTML+'<span class="time">только что ✓✓</span>';
   c.appendChild(d);
-  var cv=d.querySelector('canvas');
-  drawWaveCanvas(cv,norm,0);
+  drawWaveCanvas(d.querySelector('canvas'),norm,0);
   c.scrollTop=c.scrollHeight;
   recStream.getTracks().forEach(function(x){x.stop()});
   mediaRec=null;recStream=null;
@@ -246,14 +245,10 @@ function drawWaveCanvas(cv,bars,progress){
   }
 }
 
-// ==== ВОСПРОИЗВЕДЕНИЕ ====
 var curAudio=null,curBtn=null,curWaveDiv=null,curSpeed=1,rafId=null;
 function playVoice(btn,url){
   if(curAudio&&!curAudio.paused&&curAudio.src===url){
-    curAudio.pause();
-    btn.textContent='▶';
-    cancelAnimationFrame(rafId);
-    return;
+    curAudio.pause();btn.textContent='▶';cancelAnimationFrame(rafId);return;
   }
   if(curAudio){curAudio.pause();if(curBtn)curBtn.textContent='▶';cancelAnimationFrame(rafId)}
   curAudio=new Audio(url);
@@ -262,7 +257,7 @@ function playVoice(btn,url){
   curWaveDiv=btn.parentElement.querySelector('.wave');
   btn.textContent='⏸';
   curAudio.play();
-  var bars=getBars(curWaveDiv);
+  var bars=curWaveDiv.getAttribute('data-bars').split(',').map(Number);
   function frame(){
     if(!curAudio||curAudio.paused)return;
     var p=curAudio.currentTime/(curAudio.duration||1);
@@ -275,19 +270,6 @@ function playVoice(btn,url){
     drawWaveCanvas(curWaveDiv.querySelector('canvas'),bars,0);
     curAudio=null;curBtn=null;
   };
-}
-function getBars(waveDiv){
-  var cv=waveDiv.querySelector('canvas');
-  var bars=[];
-  var total=cv.width/60;
-  // Считываем из заранее не можем — восстанавливаем из data-атрибутов визуально
-  // Просто рандом для демо, если не сохранили
-  var seed=parseInt(waveDiv.id.replace('w',''))||1;
-  for(var i=0;i<60;i++){
-    var x=Math.sin(seed+i)*0.5+0.5;
-    bars.push(Math.max(2,x*24+4));
-  }
-  return bars;
 }
 function seekVoice(e,waveDiv){
   if(!curAudio||!curWaveDiv||curWaveDiv!==waveDiv)return;
@@ -302,18 +284,76 @@ function cycleSpeed(btn){
   if(curAudio)curAudio.playbackRate=curSpeed;
 }
 
-// ==== ЭКРАН ====
+// ==== ЗВОНКИ ====
+var callStream=null,callTimer=null,callStart=0,callMuted=false,callCamOn=false;
+async function openCall(video){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Браузер не поддерживает');return}
+  try{
+    callStream=await navigator.mediaDevices.getUserMedia({
+      video:video?{facingMode:'user'}:false,
+      audio:true
+    });
+  }catch(e){toast('Нет доступа: '+e.message);return}
+  callStart=Date.now();
+  callMuted=false;
+  callCamOn=video;
+  var h='<div id="callOv" class="call on">';
+  h+='<div class="bg">';
+  h+='<div><div class="ic">'+(video?'📹':'📞')+'</div><div class="nm">Папа</div><div class="num" id="callT">00:00</div></div>';
+  h+='<div class="local" id="localBox" style="display:'+(video?'block':'none')+'"><video id="callV" autoplay muted playsinline></video></div>';
+  h+='</div>';
+  h+='<div class="ctrl">';
+  h+='<button class="mid" id="btnMute" onclick="callMute()">🎤</button>';
+  if(video)h+='<button class="mid" id="btnCam" onclick="callCam()">📹</button>';
+  h+='<button class="end" onclick="closeCall()">📞</button>';
+  h+='</div></div>';
+  var d=document.createElement('div');d.innerHTML=h;
+  document.body.appendChild(d.firstChild);
+  if(video)document.getElementById('callV').srcObject=callStream;
+  callTimer=setInterval(function(){
+    var t=Math.floor((Date.now()-callStart)/1000);
+    var m=Math.floor(t/60),s=t%60;
+    var el=document.getElementById('callT');
+    if(el)el.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  },500);
+}
+function callMute(){
+  callMuted=!callMuted;
+  if(callStream)callStream.getAudioTracks().forEach(function(t){t.enabled=!callMuted});
+  var b=document.getElementById('btnMute');
+  if(b)b.classList.toggle('off',callMuted);
+}
+function callCam(){
+  callCamOn=!callCamOn;
+  if(callStream)callStream.getVideoTracks().forEach(function(t){t.enabled=callCamOn});
+  var b=document.getElementById('btnCam');
+  if(b)b.classList.toggle('off',!callCamOn);
+}
+function closeCall(){
+  clearInterval(callTimer);
+  if(callStream){callStream.getTracks().forEach(function(t){t.stop()});callStream=null}
+  var ov=document.getElementById('callOv');
+  if(ov)ov.remove();
+  var t=Math.floor((Date.now()-callStart)/1000);
+  var m=Math.floor(t/60),s=t%60;
+  toast('Звонок завершён · '+(m<10?'0':'')+m+':'+(s<10?'0':'')+s);
+}
+
+// ==== ДЕМОНСТРАЦИЯ ЭКРАНА ====
 var screenStream=null;
 async function startScreen(){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){
-    toast('Браузер не поддерживает');return;
+    toast('Демонстрация экрана не поддерживается на этом устройстве');return;
   }
   try{
     screenStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:false});
     document.getElementById('scVideo').srcObject=screenStream;
     document.getElementById('screen').classList.add('on');
     screenStream.getVideoTracks()[0].onended=stopScreen;
-  }catch(e){toast('Отменено')}
+  }catch(e){
+    if(e.name==='NotAllowedError')toast('Демонстрация отменена');
+    else toast('Ошибка: '+e.message);
+  }
 }
 function stopScreen(){
   if(screenStream){screenStream.getTracks().forEach(function(t){t.stop()});screenStream=null}
@@ -322,3 +362,4 @@ function stopScreen(){
 </script>
 </body>
 </html>
+    
