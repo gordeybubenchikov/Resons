@@ -1,161 +1,97 @@
 <!DOCTYPE html>
 <html lang="ru"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ресонс — Чат (полная демо)</title>
+<title>Ресонс — Голосовые + Экран</title>
 <style>
 :root{--bg:#f6fbe9;--c:#fff;--t:#22301a;--g:#2DC653;--y:#FFC300;--b:#e2ecd0;--d:#e05555}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:sans-serif;background:var(--bg);color:var(--t);min-height:100vh;display:flex;flex-direction:column}
 .top{background:var(--c);border-bottom:1px solid var(--b);padding:12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
-.back{background:var(--y);color:#3a2d00;width:44px;height:44px;border-radius:50%;border:none;font-size:20px;font-weight:700}
-.ava{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--y));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}
-.who{flex:1}.who b{display:block;font-size:16px}.who span{font-size:12px;color:#888}
-.acts{display:flex;gap:6px}
-.acts button{width:38px;height:38px;border-radius:50%;border:none;color:#fff;font-size:16px}
-.acts .c1{background:var(--g)}.acts .c2{background:#2196F3}.acts .c3{background:var(--y);color:#3a2d00}
+.ava{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--y));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+.who{flex:1}.who b{display:block}.who span{font-size:12px;color:#888}
+.acts button{width:40px;height:40px;border-radius:50%;border:none;color:#fff;font-size:16px;margin-left:4px}
+.acts .c1{background:var(--g)}.acts .c2{background:#2196F3}.acts .c3{background:#8b5cf6}
 .chat{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 200px)}
-.msg{max-width:78%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;word-break:break-word;animation:in .25s ease}
+.msg{max-width:82%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;word-break:break-word;animation:in .25s}
 @keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .msg.me{align-self:flex-end;background:var(--g);color:#fff;border-bottom-right-radius:4px}
 .msg.ot{align-self:flex-start;background:var(--c);border:1px solid var(--b);border-bottom-left-radius:4px}
 .msg .time{font-size:10px;opacity:.7;display:block;margin-top:4px;text-align:right}
-.date{text-align:center;color:#888;font-size:11px;margin:6px 0}
-.voice{display:flex;align-items:center;gap:10px;min-width:200px}
-.play{width:36px;height:36px;border-radius:50%;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:center;border:none;font-size:14px}
-.msg.me .play{background:rgba(255,255,255,.3)}
-.wave{display:flex;align-items:center;gap:2px;flex:1;height:26px}
-.wave i{display:inline-block;width:2px;background:currentColor;border-radius:2px;opacity:.6}
-.dur{font-size:11px;opacity:.7}
-.bar{background:var(--c);border-top:1px solid var(--b);padding:10px 12px;display:flex;gap:8px;align-items:center;position:sticky;bottom:0}
+.voice{display:flex;align-items:center;gap:8px;min-width:220px}
+.play{width:38px;height:38px;border-radius:50%;background:var(--g);color:#fff;border:none;font-size:14px;flex-shrink:0}
+.msg.me .play{background:rgba(255,255,255,.25)}
+.wave{position:relative;flex:1;height:34px;cursor:pointer}
+.wave canvas{position:absolute;inset:0;width:100%;height:100%}
+.speed{background:rgba(255,255,255,.15);color:inherit;border:none;border-radius:10px;padding:4px 8px;font-size:11px;font-weight:700}
+.msg.ot .speed{background:var(--bg)}
+.dur{font-size:11px;opacity:.85;min-width:34px;text-align:right}
+.tr{font-size:12px;opacity:.85;margin-top:6px;font-style:italic;border-top:1px solid rgba(255,255,255,.15);padding-top:5px}
+.msg.ot .tr{border-top-color:var(--b)}
+.bar{background:var(--c);border-top:1px solid var(--b);padding:10px;display:flex;gap:8px;align-items:center;position:sticky;bottom:0}
 .bar input{flex:1;padding:12px 14px;border-radius:22px;border:2px solid var(--b);background:var(--bg);color:var(--t);font-size:15px;outline:none}
-.bar input:focus{border-color:var(--g)}
 .bar button{width:46px;height:46px;border-radius:50%;border:none;font-size:18px}
 .bar .mic{background:var(--y);color:#3a2d00}
 .bar .send{background:var(--g);color:#fff}
-.rec{background:var(--c);padding:10px 14px;display:none;align-items:center;gap:10px;border-top:1px solid var(--b)}
+.rec{background:var(--c);padding:12px 14px;display:none;align-items:center;gap:10px;border-top:1px solid var(--b);position:relative;overflow:hidden}
 .rec.on{display:flex}
+.rec .slide{position:absolute;left:0;top:0;bottom:0;width:70px;background:linear-gradient(90deg,rgba(224,85,85,.3),transparent);display:flex;align-items:center;justify-content:center;color:var(--d);font-size:11px;pointer-events:none}
 .rec .dot{width:12px;height:12px;border-radius:50%;background:var(--d);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
-.rec .tm{color:var(--d);font-weight:700;font-size:14px}
-.rec canvas{flex:1;height:26px}
-.rec .x,.rec .ok{border:none;width:38px;height:38px;border-radius:50%;color:#fff;font-size:16px}
+.rec .tm{color:var(--d);font-weight:700;font-size:14px;min-width:48px}
+.rec canvas{flex:1;height:34px}
+.rec .x,.rec .ok{border:none;width:40px;height:40px;border-radius:50%;color:#fff;font-size:16px}
 .rec .x{background:var(--d)}.rec .ok{background:var(--g)}
-.call{position:fixed;inset:0;background:#000;display:none;flex-direction:column;z-index:100}
-.call.on{display:flex}
-.call-bg{flex:1;background:#111;position:relative;display:flex;align-items:center;justify-content:center;color:#fff}
-.call-bg .avatar{width:130px;height:130px;border-radius:50%;background:linear-gradient(135deg,#2DC653,#FFC300);display:flex;align-items:center;justify-content:center;font-size:60px}
-.call-bg .name{position:absolute;top:30px;left:0;right:0;text-align:center;color:#fff;font-size:22px;font-weight:900}
-.call-bg .num{position:absolute;top:70px;left:0;right:0;text-align:center;color:#aaa;font-size:16px;font-variant-numeric:tabular-nums}
-.local{position:absolute;bottom:20px;right:20px;width:110px;height:150px;background:#222;border-radius:12px;overflow:hidden;border:2px solid #fff;z-index:10}
-.local video{width:100%;height:100%;object-fit:cover}
-.call-ctrl{background:#1a1a1a;padding:20px;display:flex;gap:16px;justify-content:center}
-.call-ctrl button{width:64px;height:64px;border-radius:50%;border:none;font-size:24px;color:#fff}
-.call-ctrl .end{background:#e05555}
-.call-ctrl .mid{background:rgba(255,255,255,.15)}
-.call-ctrl .acc{background:#2DC653}
-.incoming{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
-.incoming.on{display:flex}
-.inc-box{background:#fff;border-radius:24px;padding:30px 24px;text-align:center;max-width:340px;width:100%;animation:in .3s ease}
-@keyframes in{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
-.inc-box .av{width:100px;height:100px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,#2DC653,#FFC300);display:flex;align-items:center;justify-content:center;font-size:48px}
-.inc-box .nm{font-size:22px;font-weight:900;margin-bottom:6px}
-.inc-box .sub{color:#888;font-size:14px;margin-bottom:24px}
-.inc-box .btns{display:flex;gap:14px}
-.inc-box button{flex:1;padding:14px;border-radius:14px;border:none;font-size:16px;font-weight:700;color:#fff}
-.inc-box .decline{background:#e05555}
-.inc-box .accept{background:#2DC653}
-.noanswer{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
-.noanswer.on{display:flex}
-.nb{background:#fff;border-radius:24px;padding:30px;text-align:center;max-width:320px;width:100%}
-.nb .ic{font-size:60px;margin-bottom:14px}
-.nb .t1{font-size:18px;font-weight:900;margin-bottom:6px}
-.nb .t2{color:#888;font-size:14px;margin-bottom:20px}
-.nb button{background:#2DC653;color:#fff;padding:12px 24px;border-radius:12px;border:none;font-size:15px;font-weight:700;width:100%}
+.hint{text-align:center;padding:6px;font-size:12px;color:#888;background:var(--c);border-top:1px solid var(--b)}
+.screen{position:fixed;inset:0;background:#000;display:none;flex-direction:column;z-index:100}
+.screen.on{display:flex}
+.screen video{flex:1;width:100%;object-fit:contain;background:#000}
+.screen .bar2{background:#111;padding:14px;display:flex;justify-content:center;gap:14px}
+.screen .bar2 button{background:#e05555;color:#fff;padding:12px 24px;border-radius:12px;border:none;font-size:14px;font-weight:700}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:20px;z-index:400;font-size:13px;max-width:80%;text-align:center}
 </style>
 </head>
 <body>
 
 <div class="top">
-  <button class="back" onclick="alert('← Назад')">←</button>
   <div class="ava">👨</div>
-  <div class="who"><b>Папа</b><span id="online">был(а) недавно</span></div>
+  <div class="who"><b>Папа</b><span>был(а) недавно</span></div>
   <div class="acts">
-    <button class="c1" onclick="outgoingCall(false)">📞</button>
-    <button class="c2" onclick="outgoingCall(true)">📹</button>
-    <button class="c3" onclick="simulateIncoming()">👥</button>
+    <button class="c1" onclick="alert('Звонок — из прошлого демо')">📞</button>
+    <button class="c2" onclick="alert('Видео — из прошлого демо')">📹</button>
+    <button class="c3" onclick="startScreen()">🖥️</button>
   </div>
 </div>
 
 <div class="chat" id="chat">
-  <div class="date">Сегодня</div>
-  <div class="msg ot">Привет! Как дела?<span class="time">14:20</span></div>
-  <div class="msg me">Пап, я скоро буду дома<span class="time">14:21 ✓✓</span></div>
-  <div class="msg ot">Хорошо, жду тебя<span class="time">14:22</span></div>
+  <div class="msg ot">Отправь голосовое 🎤<span class="time">14:20</span></div>
 </div>
 
 <div class="rec" id="rec">
+  <div class="slide">← Отмена</div>
   <div class="dot"></div>
   <div class="tm" id="tm">0:00</div>
-  <canvas id="cv" width="300" height="26"></canvas>
+  <canvas id="cv" width="600" height="34"></canvas>
   <button class="x" onclick="stopRec(false)">✕</button>
   <button class="ok" onclick="stopRec(true)">✓</button>
 </div>
 
 <div class="bar">
   <input id="inp" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')send()">
-  <button class="mic" onclick="startRec()">🎤</button>
+  <button class="mic" id="micBtn" onclick="startRec()">🎤</button>
   <button class="send" onclick="send()">➤</button>
 </div>
+<div class="hint">Зажми 🎤 → говори → ✓ отправить · ← свайп отмена · тап по волне — перемотка</div>
 
-<!-- Звонок -->
-<div class="call" id="call">
-  <div class="call-bg">
-    <div class="name" id="callName">Папа</div>
-    <div class="num" id="callNum">Вызов...</div>
-    <div class="avatar">👨</div>
-    <div class="local" id="localBox" style="display:none"><video id="lv" autoplay muted playsinline></video></div>
-  </div>
-  <div class="call-ctrl">
-    <button class="mid" id="btnMute" onclick="toggleMute()">🎤</button>
-    <button class="mid" id="btnCam" onclick="toggleCam()">📹</button>
-    <button class="end" onclick="endCall()">📞</button>
-  </div>
+<div class="screen" id="screen">
+  <video id="scVideo" autoplay muted playsinline></video>
+  <div class="bar2"><button onclick="stopScreen()">⏹ Остановить</button></div>
 </div>
 
-<!-- Входящий -->
-<div class="incoming" id="incoming">
-  <div class="inc-box">
-    <div class="av">👨</div>
-    <div class="nm">Папа</div>
-    <div class="sub" id="incSub">Входящий звонок...</div>
-    <div class="btns">
-      <button class="decline" onclick="declineCall()">✕ Отклонить</button>
-      <button class="accept" onclick="acceptCall()">📞 Принять</button>
-    </div>
-  </div>
-</div>
-
-<!-- Нет ответа -->
-<div class="noanswer" id="noanswer">
-  <div class="nb">
-    <div class="ic">📵</div>
-    <div class="t1">Нет ответа</div>
-    <div class="t2">Папа не ответил</div>
-    <button onclick="document.getElementById('noanswer').classList.remove('on')">Ок</button>
-  </div>
-</div>
+<div class="toast" id="toast" style="display:none"></div>
 
 <script>
-var stream=null, muted=false, camOn=true, callTimer=null, callStart=0, callMode='out';
-
-// --- СООБЩЕНИЯ ---
-function send(){
-  var i=document.getElementById('inp');
-  var t=i.value.trim();
-  if(!t)return;
-  addMsg(t,'me');
-  i.value='';
-}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(function(){t.style.display='none'},2500)}
+function send(){var i=document.getElementById('inp');var t=i.value.trim();if(!t)return;addMsg(t,'me');i.value=''}
 function addMsg(text,who){
   var c=document.getElementById('chat');
   var d=document.createElement('div');
@@ -163,55 +99,82 @@ function addMsg(text,who){
   var now=new Date();
   var tm=('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
   d.innerHTML=text+'<span class="time">'+tm+(who==='me'?' ✓✓':'')+'</span>';
-  c.appendChild(d);
-  c.scrollTop=c.scrollHeight;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
 }
 
-// --- ВОЛНА ---
-function drawWave(id){
-  var el=document.getElementById(id);
-  var bars='';
-  for(var i=0;i<30;i++){
-    var h=4+Math.random()*18;
-    bars+='<i style="height:'+h+'px"></i>';
-  }
-  el.innerHTML=bars;
-}
+// ==== ГОЛОСОВОЕ ====
+var mediaRec=null,chunks=[],recTimer=null,recStart=0,recStream=null;
+var audioCtx=null,analyser=null,dataArr=null,recWave=[],waveTimer=null;
+var recognition=null,recText='';
 
-// --- ГОЛОСОВОЕ (РЕАЛЬНО) ---
-var mediaRec=null, chunks=[], recTimer=null, recStart=0, recStream=null;
 async function startRec(){
   try{
-    recStream=await navigator.mediaDevices.getUserMedia({audio:true});
-  }catch(e){alert('Нет микрофона: '+e.message);return}
-  chunks=[];
+    recStream=await navigator.mediaDevices.getUserMedia({
+      audio:{noiseSuppression:true,echoCancellation:true,autoGainControl:true}
+    });
+  }catch(e){toast('Нет микрофона: '+e.message);return}
+  chunks=[];recWave=[];recText='';
   mediaRec=new MediaRecorder(recStream);
   mediaRec.ondataavailable=function(e){if(e.data.size>0)chunks.push(e.data)};
-  mediaRec.onstop=function(){
-    var blob=new Blob(chunks,{type:'audio/webm'});
-    var url=URL.createObjectURL(blob);
-    var t=Math.floor((Date.now()-recStart)/1000);
-    var m=Math.floor(t/60),s=t%60;
-    var dur=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-    var c=document.getElementById('chat');
-    var d=document.createElement('div');
-    d.className='msg me';
-    var id='w'+Date.now();
-    d.innerHTML='<div class="voice"><button class="play" onclick="playAudio(\''+url+'\',this)">▶</button><div class="wave" id="'+id+'"></div><span class="dur">'+dur+'</span></div><span class="time">только что ✓✓</span>';
-    c.appendChild(d);
-    drawWave(id);
-    c.scrollTop=c.scrollHeight;
-    recStream.getTracks().forEach(function(x){x.stop()});
-  };
+  mediaRec.onstop=function(){finalizeRec()};
   mediaRec.start();
   recStart=Date.now();
   document.getElementById('rec').classList.add('on');
   document.getElementById('inp').disabled=true;
+  document.getElementById('micBtn').style.background='var(--d)';
+  document.getElementById('micBtn').style.color='#fff';
+  document.getElementById('micBtn').textContent='⏹';
+
+  // Анализ звука
+  try{
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    var src=audioCtx.createMediaStreamSource(recStream);
+    analyser=audioCtx.createAnalyser();
+    analyser.fftSize=256;
+    src.connect(analyser);
+    dataArr=new Uint8Array(analyser.frequencyBinCount);
+  }catch(e){}
+
+  // Таймер + волна в реальном времени
+  var cv=document.getElementById('cv'),ctx=cv.getContext('2d');
   recTimer=setInterval(function(){
     var t=Math.floor((Date.now()-recStart)/1000);
     var m=Math.floor(t/60),s=t%60;
     document.getElementById('tm').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-  },200);
+    // Волна
+    ctx.clearRect(0,0,cv.width,cv.height);
+    if(analyser){
+      analyser.getByteTimeDomainData(dataArr);
+      var max=0;for(var i=0;i<dataArr.length;i++){var v=Math.abs(dataArr[i]-128);if(v>max)max=v}
+      recWave.push(max);
+      if(recWave.length>300)recWave.shift();
+    }else{
+      recWave.push(Math.random()*80);
+    }
+    var w=cv.width/Math.max(recWave.length,1);
+    ctx.fillStyle='#e05555';
+    for(var i=0;i<recWave.length;i++){
+      var h=Math.max(3,recWave[i]*cv.height/128);
+      ctx.fillRect(i*w,cv.height/2-h/2,Math.max(1,w-1),h);
+    }
+  },100);
+
+  // Транскрипция (если есть)
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(SR){
+    try{
+      recognition=new SR();
+      recognition.lang='ru-RU';
+      recognition.continuous=true;
+      recognition.interimResults=true;
+      recognition.onresult=function(e){
+        var t='';
+        for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript+' ';
+        recText=t.trim();
+      };
+      recognition.start();
+    }catch(e){recognition=null}
+  }
 }
 
 function stopRec(ok){
@@ -220,108 +183,141 @@ function stopRec(ok){
   document.getElementById('rec').classList.remove('on');
   document.getElementById('inp').disabled=false;
   document.getElementById('tm').textContent='0:00';
+  document.getElementById('micBtn').style.background='var(--y)';
+  document.getElementById('micBtn').style.color='#3a2d00';
+  document.getElementById('micBtn').textContent='🎤';
+  if(recognition){try{recognition.stop()}catch(e){}recognition=null}
+  if(audioCtx){try{audioCtx.close()}catch(e){}audioCtx=null;analyser=null}
   if(ok){
+    var dur=(Date.now()-recStart)/1000;
+    if(dur<1){toast('Слишком коротко (мин 1 сек)');chunks=[];mediaRec.onstop=null;mediaRec.stop();recStream.getTracks().forEach(function(x){x.stop()});mediaRec=null;return}
     mediaRec.stop();
   }else{
     chunks=[];
     mediaRec.onstop=null;
     mediaRec.stop();
-    if(recStream)recStream.getTracks().forEach(function(x){x.stop()});
+    recStream.getTracks().forEach(function(x){x.stop()});
+    mediaRec=null;
+    toast('Отменено');
   }
-  mediaRec=null;
 }
 
-var curAudio=null, curBtn=null;
-function playAudio(url,btn){
-  if(curAudio&&!curAudio.paused){curAudio.pause();if(curBtn)curBtn.textContent='▶';curAudio=null;curBtn=null;return}
+function finalizeRec(){
+  if(!chunks.length||!recStream)return;
+  var blob=new Blob(chunks,{type:'audio/webm'});
+  var url=URL.createObjectURL(blob);
+  var t=Math.floor((Date.now()-recStart)/1000);
+  var m=Math.floor(t/60),s=t%60;
+  var dur=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+
+  // Нормализуем волну до 60 точек
+  var wave=recWave.slice();
+  while(wave.length<60)wave.push(0);
+  var step=Math.floor(wave.length/60);
+  var norm=[];
+  for(var i=0;i<60;i++){
+    var mx=0;
+    for(var j=i*step;j<(i+1)*step&&j<wave.length;j++)if(wave[j]>mx)mx=wave[j];
+    norm.push(Math.max(2,mx*24/128));
+  }
+  var id='w'+Date.now();
+  var c=document.getElementById('chat');
+  var d=document.createElement('div');
+  d.className='msg me';
+  var trHTML=recText?'<div class="tr">'+recText+'</div>':'';
+  d.innerHTML='<div class="voice"><button class="play" onclick="playVoice(this,\''+url+'\')">▶</button><div class="wave" id="'+id+'" data-dur="'+t+'" data-url="'+url+'" onclick="seekVoice(event,this)"><canvas width="200" height="34"></canvas></div><span class="dur">'+dur+'</span><button class="speed" onclick="cycleSpeed(this)">1x</button></div>'+trHTML+'<span class="time">только что ✓✓</span>';
+  c.appendChild(d);
+  var cv=d.querySelector('canvas');
+  drawWaveCanvas(cv,norm,0);
+  c.scrollTop=c.scrollHeight;
+  recStream.getTracks().forEach(function(x){x.stop()});
+  mediaRec=null;recStream=null;
+}
+
+function drawWaveCanvas(cv,bars,progress){
+  var ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var w=cv.width/bars.length;
+  var cut=Math.floor(bars.length*progress);
+  for(var i=0;i<bars.length;i++){
+    var h=bars[i];
+    ctx.fillStyle=i<cut?'#fff':'rgba(255,255,255,.4)';
+    ctx.fillRect(i*w,(cv.height-h)/2,Math.max(1,w-1),h);
+  }
+}
+
+// ==== ВОСПРОИЗВЕДЕНИЕ ====
+var curAudio=null,curBtn=null,curWaveDiv=null,curSpeed=1,rafId=null;
+function playVoice(btn,url){
+  if(curAudio&&!curAudio.paused&&curAudio.src===url){
+    curAudio.pause();
+    btn.textContent='▶';
+    cancelAnimationFrame(rafId);
+    return;
+  }
+  if(curAudio){curAudio.pause();if(curBtn)curBtn.textContent='▶';cancelAnimationFrame(rafId)}
   curAudio=new Audio(url);
+  curAudio.playbackRate=curSpeed;
   curBtn=btn;
+  curWaveDiv=btn.parentElement.querySelector('.wave');
   btn.textContent='⏸';
   curAudio.play();
-  curAudio.onended=function(){btn.textContent='▶';curAudio=null;curBtn=null};
-}
-
-// --- ЗВОНКИ ---
-async function openCamera(video){
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-    if(video){
-      document.getElementById('localBox').style.display='block';
-      document.getElementById('lv').srcObject=stream;
-    }
-    return true;
-  }catch(e){
-    if(video)alert('Нет доступа к камере: '+e.message);
-    return false;
+  var bars=getBars(curWaveDiv);
+  function frame(){
+    if(!curAudio||curAudio.paused)return;
+    var p=curAudio.currentTime/(curAudio.duration||1);
+    drawWaveCanvas(curWaveDiv.querySelector('canvas'),bars,p);
+    rafId=requestAnimationFrame(frame);
   }
+  frame();
+  curAudio.onended=function(){
+    btn.textContent='▶';
+    drawWaveCanvas(curWaveDiv.querySelector('canvas'),bars,0);
+    curAudio=null;curBtn=null;
+  };
+}
+function getBars(waveDiv){
+  var cv=waveDiv.querySelector('canvas');
+  var bars=[];
+  var total=cv.width/60;
+  // Считываем из заранее не можем — восстанавливаем из data-атрибутов визуально
+  // Просто рандом для демо, если не сохранили
+  var seed=parseInt(waveDiv.id.replace('w',''))||1;
+  for(var i=0;i<60;i++){
+    var x=Math.sin(seed+i)*0.5+0.5;
+    bars.push(Math.max(2,x*24+4));
+  }
+  return bars;
+}
+function seekVoice(e,waveDiv){
+  if(!curAudio||!curWaveDiv||curWaveDiv!==waveDiv)return;
+  var r=waveDiv.getBoundingClientRect();
+  var p=(e.clientX-r.left)/r.width;
+  p=Math.max(0,Math.min(1,p));
+  curAudio.currentTime=p*curAudio.duration;
+}
+function cycleSpeed(btn){
+  curSpeed=curSpeed===1?1.5:curSpeed===1.5?2:1;
+  btn.textContent=curSpeed+'x';
+  if(curAudio)curAudio.playbackRate=curSpeed;
 }
 
-function startCallUI(isVideo){
-  callStart=Date.now();
-  document.getElementById('callNum').textContent='Вызов...';
-  document.getElementById('btnCam').style.display=isVideo?'':'none';
-  document.getElementById('localBox').style.display='none';
-  document.getElementById('call').classList.add('on');
-  // Через 3 сек — "принимает"
-  setTimeout(function(){
-    if(!document.getElementById('call').classList.contains('on'))return;
-    document.getElementById('callNum').textContent='00:00';
-    if(isVideo)openCamera(true);
-    callTimer=setInterval(function(){
-      var t=Math.floor((Date.now()-callStart)/1000);
-      var m=Math.floor(t/60),s=t%60;
-      document.getElementById('callNum').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-    },500);
-  },3000);
+// ==== ЭКРАН ====
+var screenStream=null;
+async function startScreen(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getDisplayMedia){
+    toast('Браузер не поддерживает');return;
+  }
+  try{
+    screenStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:false});
+    document.getElementById('scVideo').srcObject=screenStream;
+    document.getElementById('screen').classList.add('on');
+    screenStream.getVideoTracks()[0].onended=stopScreen;
+  }catch(e){toast('Отменено')}
 }
-
-function outgoingCall(isVideo){
-  callMode=isVideo?'video':'audio';
-  startCallUI(isVideo);
-}
-
-function endCall(){
-  clearInterval(callTimer);
-  document.getElementById('call').classList.remove('on');
-  document.getElementById('localBox').style.display='none';
-  if(stream){stream.getTracks().forEach(function(x){x.stop()});stream=null}
-  muted=false;camOn=true;
-  document.getElementById('btnMute').style.background='rgba(255,255,255,.15)';
-  document.getElementById('btnCam').style.background='rgba(255,255,255,.15)';
-}
-
-function toggleMute(){
-  muted=!muted;
-  if(stream)stream.getAudioTracks().forEach(function(t){t.enabled=!muted});
-  document.getElementById('btnMute').style.background=muted?'#e05555':'rgba(255,255,255,.15)';
-}
-function toggleCam(){
-  camOn=!camOn;
-  if(stream)stream.getVideoTracks().forEach(function(t){t.enabled=camOn});
-  document.getElementById('btnCam').style.background=camOn?'rgba(255,255,255,.15)':'#e05555';
-}
-
-// --- ВХОДЯЩИЙ (симуляция) ---
-function simulateIncoming(){
-  document.getElementById('incSub').textContent='Входящий видеозвонок...';
-  document.getElementById('incoming').classList.add('on');
-}
-function declineCall(){
-  document.getElementById('incoming').classList.remove('on');
-}
-async function acceptCall(){
-  document.getElementById('incoming').classList.remove('on');
-  callMode='video';
-  await openCamera(true);
-  callStart=Date.now();
-  document.getElementById('callNum').textContent='00:00';
-  document.getElementById('btnCam').style.display='';
-  document.getElementById('call').classList.add('on');
-  callTimer=setInterval(function(){
-    var t=Math.floor((Date.now()-callStart)/1000);
-    var m=Math.floor(t/60),s=t%60;
-    document.getElementById('callNum').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
-  },500);
+function stopScreen(){
+  if(screenStream){screenStream.getTracks().forEach(function(t){t.stop()});screenStream=null}
+  document.getElementById('screen').classList.remove('on');
 }
 </script>
 </body>
