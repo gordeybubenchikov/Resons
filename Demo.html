@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ресонс — Чат (полная демо)</title>
+<style>
+:root{--bg:#f6fbe9;--c:#fff;--t:#22301a;--g:#2DC653;--y:#FFC300;--b:#e2ecd0;--d:#e05555}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:sans-serif;background:var(--bg);color:var(--t);min-height:100vh;display:flex;flex-direction:column}
+.top{background:var(--c);border-bottom:1px solid var(--b);padding:12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+.back{background:var(--y);color:#3a2d00;width:44px;height:44px;border-radius:50%;border:none;font-size:20px;font-weight:700}
+.ava{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--y));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}
+.who{flex:1}.who b{display:block;font-size:16px}.who span{font-size:12px;color:#888}
+.acts{display:flex;gap:6px}
+.acts button{width:38px;height:38px;border-radius:50%;border:none;color:#fff;font-size:16px}
+.acts .c1{background:var(--g)}.acts .c2{background:#2196F3}.acts .c3{background:var(--y);color:#3a2d00}
+.chat{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 200px)}
+.msg{max-width:78%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;word-break:break-word;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.me{align-self:flex-end;background:var(--g);color:#fff;border-bottom-right-radius:4px}
+.msg.ot{align-self:flex-start;background:var(--c);border:1px solid var(--b);border-bottom-left-radius:4px}
+.msg .time{font-size:10px;opacity:.7;display:block;margin-top:4px;text-align:right}
+.date{text-align:center;color:#888;font-size:11px;margin:6px 0}
+.voice{display:flex;align-items:center;gap:10px;min-width:200px}
+.play{width:36px;height:36px;border-radius:50%;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:center;border:none;font-size:14px}
+.msg.me .play{background:rgba(255,255,255,.3)}
+.wave{display:flex;align-items:center;gap:2px;flex:1;height:26px}
+.wave i{display:inline-block;width:2px;background:currentColor;border-radius:2px;opacity:.6}
+.dur{font-size:11px;opacity:.7}
+.bar{background:var(--c);border-top:1px solid var(--b);padding:10px 12px;display:flex;gap:8px;align-items:center;position:sticky;bottom:0}
+.bar input{flex:1;padding:12px 14px;border-radius:22px;border:2px solid var(--b);background:var(--bg);color:var(--t);font-size:15px;outline:none}
+.bar input:focus{border-color:var(--g)}
+.bar button{width:46px;height:46px;border-radius:50%;border:none;font-size:18px}
+.bar .mic{background:var(--y);color:#3a2d00}
+.bar .send{background:var(--g);color:#fff}
+.rec{background:var(--c);padding:10px 14px;display:none;align-items:center;gap:10px;border-top:1px solid var(--b)}
+.rec.on{display:flex}
+.rec .dot{width:12px;height:12px;border-radius:50%;background:var(--d);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+.rec .tm{color:var(--d);font-weight:700;font-size:14px}
+.rec canvas{flex:1;height:26px}
+.rec .x,.rec .ok{border:none;width:38px;height:38px;border-radius:50%;color:#fff;font-size:16px}
+.rec .x{background:var(--d)}.rec .ok{background:var(--g)}
+.call{position:fixed;inset:0;background:#000;display:none;flex-direction:column;z-index:100}
+.call.on{display:flex}
+.call-bg{flex:1;background:#111;position:relative;display:flex;align-items:center;justify-content:center;color:#fff}
+.call-bg .avatar{width:130px;height:130px;border-radius:50%;background:linear-gradient(135deg,#2DC653,#FFC300);display:flex;align-items:center;justify-content:center;font-size:60px}
+.call-bg .name{position:absolute;top:30px;left:0;right:0;text-align:center;color:#fff;font-size:22px;font-weight:900}
+.call-bg .num{position:absolute;top:70px;left:0;right:0;text-align:center;color:#aaa;font-size:16px;font-variant-numeric:tabular-nums}
+.local{position:absolute;bottom:20px;right:20px;width:110px;height:150px;background:#222;border-radius:12px;overflow:hidden;border:2px solid #fff;z-index:10}
+.local video{width:100%;height:100%;object-fit:cover}
+.call-ctrl{background:#1a1a1a;padding:20px;display:flex;gap:16px;justify-content:center}
+.call-ctrl button{width:64px;height:64px;border-radius:50%;border:none;font-size:24px;color:#fff}
+.call-ctrl .end{background:#e05555}
+.call-ctrl .mid{background:rgba(255,255,255,.15)}
+.call-ctrl .acc{background:#2DC653}
+.incoming{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+.incoming.on{display:flex}
+.inc-box{background:#fff;border-radius:24px;padding:30px 24px;text-align:center;max-width:340px;width:100%;animation:in .3s ease}
+@keyframes in{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.inc-box .av{width:100px;height:100px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,#2DC653,#FFC300);display:flex;align-items:center;justify-content:center;font-size:48px}
+.inc-box .nm{font-size:22px;font-weight:900;margin-bottom:6px}
+.inc-box .sub{color:#888;font-size:14px;margin-bottom:24px}
+.inc-box .btns{display:flex;gap:14px}
+.inc-box button{flex:1;padding:14px;border-radius:14px;border:none;font-size:16px;font-weight:700;color:#fff}
+.inc-box .decline{background:#e05555}
+.inc-box .accept{background:#2DC653}
+.noanswer{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+.noanswer.on{display:flex}
+.nb{background:#fff;border-radius:24px;padding:30px;text-align:center;max-width:320px;width:100%}
+.nb .ic{font-size:60px;margin-bottom:14px}
+.nb .t1{font-size:18px;font-weight:900;margin-bottom:6px}
+.nb .t2{color:#888;font-size:14px;margin-bottom:20px}
+.nb button{background:#2DC653;color:#fff;padding:12px 24px;border-radius:12px;border:none;font-size:15px;font-weight:700;width:100%}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <button class="back" onclick="alert('← Назад')">←</button>
+  <div class="ava">👨</div>
+  <div class="who"><b>Папа</b><span id="online">был(а) недавно</span></div>
+  <div class="acts">
+    <button class="c1" onclick="outgoingCall(false)">📞</button>
+    <button class="c2" onclick="outgoingCall(true)">📹</button>
+    <button class="c3" onclick="simulateIncoming()">👥</button>
+  </div>
+</div>
+
+<div class="chat" id="chat">
+  <div class="date">Сегодня</div>
+  <div class="msg ot">Привет! Как дела?<span class="time">14:20</span></div>
+  <div class="msg me">Пап, я скоро буду дома<span class="time">14:21 ✓✓</span></div>
+  <div class="msg ot">Хорошо, жду тебя<span class="time">14:22</span></div>
+</div>
+
+<div class="rec" id="rec">
+  <div class="dot"></div>
+  <div class="tm" id="tm">0:00</div>
+  <canvas id="cv" width="300" height="26"></canvas>
+  <button class="x" onclick="stopRec(false)">✕</button>
+  <button class="ok" onclick="stopRec(true)">✓</button>
+</div>
+
+<div class="bar">
+  <input id="inp" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')send()">
+  <button class="mic" onclick="startRec()">🎤</button>
+  <button class="send" onclick="send()">➤</button>
+</div>
+
+<!-- Звонок -->
+<div class="call" id="call">
+  <div class="call-bg">
+    <div class="name" id="callName">Папа</div>
+    <div class="num" id="callNum">Вызов...</div>
+    <div class="avatar">👨</div>
+    <div class="local" id="localBox" style="display:none"><video id="lv" autoplay muted playsinline></video></div>
+  </div>
+  <div class="call-ctrl">
+    <button class="mid" id="btnMute" onclick="toggleMute()">🎤</button>
+    <button class="mid" id="btnCam" onclick="toggleCam()">📹</button>
+    <button class="end" onclick="endCall()">📞</button>
+  </div>
+</div>
+
+<!-- Входящий -->
+<div class="incoming" id="incoming">
+  <div class="inc-box">
+    <div class="av">👨</div>
+    <div class="nm">Папа</div>
+    <div class="sub" id="incSub">Входящий звонок...</div>
+    <div class="btns">
+      <button class="decline" onclick="declineCall()">✕ Отклонить</button>
+      <button class="accept" onclick="acceptCall()">📞 Принять</button>
+    </div>
+  </div>
+</div>
+
+<!-- Нет ответа -->
+<div class="noanswer" id="noanswer">
+  <div class="nb">
+    <div class="ic">📵</div>
+    <div class="t1">Нет ответа</div>
+    <div class="t2">Папа не ответил</div>
+    <button onclick="document.getElementById('noanswer').classList.remove('on')">Ок</button>
+  </div>
+</div>
+
+<script>
+var stream=null, muted=false, camOn=true, callTimer=null, callStart=0, callMode='out';
+
+// --- СООБЩЕНИЯ ---
+function send(){
+  var i=document.getElementById('inp');
+  var t=i.value.trim();
+  if(!t)return;
+  addMsg(t,'me');
+  i.value='';
+}
+function addMsg(text,who){
+  var c=document.getElementById('chat');
+  var d=document.createElement('div');
+  d.className='msg '+who;
+  var now=new Date();
+  var tm=('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
+  d.innerHTML=text+'<span class="time">'+tm+(who==='me'?' ✓✓':'')+'</span>';
+  c.appendChild(d);
+  c.scrollTop=c.scrollHeight;
+}
+
+// --- ВОЛНА ---
+function drawWave(id){
+  var el=document.getElementById(id);
+  var bars='';
+  for(var i=0;i<30;i++){
+    var h=4+Math.random()*18;
+    bars+='<i style="height:'+h+'px"></i>';
+  }
+  el.innerHTML=bars;
+}
+
+// --- ГОЛОСОВОЕ (РЕАЛЬНО) ---
+var mediaRec=null, chunks=[], recTimer=null, recStart=0, recStream=null;
+async function startRec(){
+  try{
+    recStream=await navigator.mediaDevices.getUserMedia({audio:true});
+  }catch(e){alert('Нет микрофона: '+e.message);return}
+  chunks=[];
+  mediaRec=new MediaRecorder(recStream);
+  mediaRec.ondataavailable=function(e){if(e.data.size>0)chunks.push(e.data)};
+  mediaRec.onstop=function(){
+    var blob=new Blob(chunks,{type:'audio/webm'});
+    var url=URL.createObjectURL(blob);
+    var t=Math.floor((Date.now()-recStart)/1000);
+    var m=Math.floor(t/60),s=t%60;
+    var dur=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    var c=document.getElementById('chat');
+    var d=document.createElement('div');
+    d.className='msg me';
+    var id='w'+Date.now();
+    d.innerHTML='<div class="voice"><button class="play" onclick="playAudio(\''+url+'\',this)">▶</button><div class="wave" id="'+id+'"></div><span class="dur">'+dur+'</span></div><span class="time">только что ✓✓</span>';
+    c.appendChild(d);
+    drawWave(id);
+    c.scrollTop=c.scrollHeight;
+    recStream.getTracks().forEach(function(x){x.stop()});
+  };
+  mediaRec.start();
+  recStart=Date.now();
+  document.getElementById('rec').classList.add('on');
+  document.getElementById('inp').disabled=true;
+  recTimer=setInterval(function(){
+    var t=Math.floor((Date.now()-recStart)/1000);
+    var m=Math.floor(t/60),s=t%60;
+    document.getElementById('tm').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  },200);
+}
+
+function stopRec(ok){
+  if(!mediaRec||mediaRec.state==='inactive')return;
+  clearInterval(recTimer);
+  document.getElementById('rec').classList.remove('on');
+  document.getElementById('inp').disabled=false;
+  document.getElementById('tm').textContent='0:00';
+  if(ok){
+    mediaRec.stop();
+  }else{
+    chunks=[];
+    mediaRec.onstop=null;
+    mediaRec.stop();
+    if(recStream)recStream.getTracks().forEach(function(x){x.stop()});
+  }
+  mediaRec=null;
+}
+
+var curAudio=null, curBtn=null;
+function playAudio(url,btn){
+  if(curAudio&&!curAudio.paused){curAudio.pause();if(curBtn)curBtn.textContent='▶';curAudio=null;curBtn=null;return}
+  curAudio=new Audio(url);
+  curBtn=btn;
+  btn.textContent='⏸';
+  curAudio.play();
+  curAudio.onended=function(){btn.textContent='▶';curAudio=null;curBtn=null};
+}
+
+// --- ЗВОНКИ ---
+async function openCamera(video){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    if(video){
+      document.getElementById('localBox').style.display='block';
+      document.getElementById('lv').srcObject=stream;
+    }
+    return true;
+  }catch(e){
+    if(video)alert('Нет доступа к камере: '+e.message);
+    return false;
+  }
+}
+
+function startCallUI(isVideo){
+  callStart=Date.now();
+  document.getElementById('callNum').textContent='Вызов...';
+  document.getElementById('btnCam').style.display=isVideo?'':'none';
+  document.getElementById('localBox').style.display='none';
+  document.getElementById('call').classList.add('on');
+  // Через 3 сек — "принимает"
+  setTimeout(function(){
+    if(!document.getElementById('call').classList.contains('on'))return;
+    document.getElementById('callNum').textContent='00:00';
+    if(isVideo)openCamera(true);
+    callTimer=setInterval(function(){
+      var t=Math.floor((Date.now()-callStart)/1000);
+      var m=Math.floor(t/60),s=t%60;
+      document.getElementById('callNum').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+    },500);
+  },3000);
+}
+
+function outgoingCall(isVideo){
+  callMode=isVideo?'video':'audio';
+  startCallUI(isVideo);
+}
+
+function endCall(){
+  clearInterval(callTimer);
+  document.getElementById('call').classList.remove('on');
+  document.getElementById('localBox').style.display='none';
+  if(stream){stream.getTracks().forEach(function(x){x.stop()});stream=null}
+  muted=false;camOn=true;
+  document.getElementById('btnMute').style.background='rgba(255,255,255,.15)';
+  document.getElementById('btnCam').style.background='rgba(255,255,255,.15)';
+}
+
+function toggleMute(){
+  muted=!muted;
+  if(stream)stream.getAudioTracks().forEach(function(t){t.enabled=!muted});
+  document.getElementById('btnMute').style.background=muted?'#e05555':'rgba(255,255,255,.15)';
+}
+function toggleCam(){
+  camOn=!camOn;
+  if(stream)stream.getVideoTracks().forEach(function(t){t.enabled=camOn});
+  document.getElementById('btnCam').style.background=camOn?'rgba(255,255,255,.15)':'#e05555';
+}
+
+// --- ВХОДЯЩИЙ (симуляция) ---
+function simulateIncoming(){
+  document.getElementById('incSub').textContent='Входящий видеозвонок...';
+  document.getElementById('incoming').classList.add('on');
+}
+function declineCall(){
+  document.getElementById('incoming').classList.remove('on');
+}
+async function acceptCall(){
+  document.getElementById('incoming').classList.remove('on');
+  callMode='video';
+  await openCamera(true);
+  callStart=Date.now();
+  document.getElementById('callNum').textContent='00:00';
+  document.getElementById('btnCam').style.display='';
+  document.getElementById('call').classList.add('on');
+  callTimer=setInterval(function(){
+    var t=Math.floor((Date.now()-callStart)/1000);
+    var m=Math.floor(t/60),s=t%60;
+    document.getElementById('callNum').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  },500);
+}
+</script>
+</body>
+</html>
