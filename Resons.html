@@ -128,7 +128,25 @@ body.dark .sheet-input input { color: #fff; }
 <div class="tb"><div class="nm" onclick="askSecret()">Ресонс</div><div><button onclick="openCreate()">+</button></div></div>
 
 <div id="a" class="screen on"><h1>Лента</h1><div id="sts" class="stories-bar"></div><div id="feed"></div></div>
-<div id="v" class="screen"><h1>📹 Видео</h1><div id="vidfeed"></div></div>
+<div id="v" class="screen">
+    <h1>📹 Видео</h1>
+    <!-- ПАНЕЛЬ ФИЛЬТРОВ -->
+    <div class="video-filters" id="videoFilters">
+        <button class="vf active" onclick="filterVideos('all', this)">Все</button>
+        <button class="vf" onclick="filterVideos('Ресонс', this)">Ресонс</button>
+        <button class="vf" onclick="filterVideos('Влоги', this)">Влоги</button>
+        <button class="vf" onclick="filterVideos('Игры', this)">Игры</button>
+        <button class="vf" onclick="filterVideos('Музыка', this)">Музыка</button>
+        <button class="vf" onclick="filterVideos('Юмор', this)">Юмор</button>
+        <button class="vf" onclick="filterVideos('Спорт', this)">Спорт</button>
+        <button class="vf" onclick="filterVideos('Обучение', this)">Обучение</button>
+        <button class="vf" onclick="filterVideos('Животные', this)">Животные</button>
+        <button class="vf" onclick="filterVideos('Еда', this)">Еда</button>
+        <button class="vf" onclick="filterVideos('Наука', this)">Наука</button>
+        <button class="vf" onclick="filterVideos('Технологии', this)">Технологии</button>
+    </div>
+    <div id="vidfeed"></div>
+</div>
 <div id="k" class="screen" style="padding:0"><div id="cortFeed" style="position:fixed;inset:0;top:56px;bottom:56px;overflow-y:scroll;scroll-snap-type:y mandatory;background:#000"></div></div>
 <div id="b" class="screen"><h1>💬 Чаты</h1><div id="chatList"></div><div id="chatView" style="display:none"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><b id="cName"></b><button class="bw" onclick="backChats()" style="width:auto;padding:6px 10px;font-size:12px">←</button></div><div id="msgs" class="msgs"></div><div style="display:flex;gap:6px;align-items:center"><button class="act" style="width:auto;background:#FFC300;color:#3a2d00;padding:10px 12px;margin:0" onclick="openStk()">😀</button><input id="mi" placeholder="Сообщение" style="margin:0;flex:1"><button class="act" style="width:auto;padding:10px 12px;margin:0" id="vbtn" onclick="voice()">🎤</button><button class="act" style="width:auto;padding:10px 12px;margin:0" onclick="sendM()">➤</button></div></div></div>
 <div id="c" class="screen"><h1>🎮 Игры</h1><div class="gc" id="gm"></div><div id="gA" class="cen" style="margin-top:12px"></div></div>
@@ -173,9 +191,6 @@ body.dark .sheet-input input { color: #fff; }
 <div class="set-section" id="set-other">
   <div class="card" onclick="alert('Версия 1.0.0')"><b>ℹ️ О приложении</b></div>
   <div class="card" onclick="alert('⭐ Ресонец — бесплатно!')"><b>⭐ Ресонец</b></div>
-  <div class="card" id="cyberBtn" onclick="confirmCyber()" style="display:none; border-color:#e05555;">
-    <b style="color:#e05555;">🚨 Режим кибератаки</b>
-  </div>
 </div>
 </div>
 </div>
@@ -212,375 +227,100 @@ body.dark .sheet-input input { color: #fff; }
     </div>
 </div>
 
-<div id="f" class="screen"><h1>⭐ Админ</h1>
-<div class="card" onclick="admStats()"><b>📊 Статистика</b></div>
-<div class="card" onclick="admUsers()"><b>👥 Юзеры</b></div>
-<div class="card" onclick="admReports()"><b>⚠️ Жалобы</b></div>
-<div class="card" onclick="admPosts()"><b>📝 Все посты</b></div>
-<div class="card" onclick="admClear()"><b style="color:#e05555">🗑️ Очистить всё</b></div>
-<div id="admC" style="margin-top:12px"></div>
-</div>
-
-<div id="callOverlay">
-    <video id="remoteVideo" autoplay></video>
-    <video id="localVideo" autoplay muted></video>
-    <div class="call-controls">
-        <button class="call-btn" onclick="shareScreen()" title="Демонстрация экрана">
-            <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        </button>
-        <button class="call-btn end-call" onclick="endCall()" title="Завершить">
-            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.39.44 2 2 0 0 1 1.8 2v2.5a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.13 4.18 2 2 0 0 1 4.11 2h2.5a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .44 2.39 2 2 0 0 1-.45 2.11L7.33 9.49a16 16 0 0 0 3.35 3.82z"/></svg>
-        </button>
-    </div>
-</div>
-
 <script>
-// --- SUPABASE INIT ---
 const SUPABASE_URL = 'https://owfnqdqpzcmkblgdrafk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93Zm5xZHFwemNta2JsZ2RyYWZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2ODc2NDEsImV4cCI6MjEwNzI2MzY0MX0.LloyseM1xpp-APLp5uvYeUbFkqW-Psm0R9LLuRPgX00';
 let supabaseClient = null;
-window.addEventListener('load', function() {
-    try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.log(e); }
-});
+window.addEventListener('load', function() { try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) {} });
 
-var posts=[];
-var me=JSON.parse(localStorage.getItem('me')||'null');
-var users=JSON.parse(localStorage.getItem('users')||'{}');
-var likes=JSON.parse(localStorage.getItem('likes')||'{}');
-var comments=JSON.parse(localStorage.getItem('comments')||'{}');
-var priv=JSON.parse(localStorage.getItem('priv')||'{}');
-var blocked=JSON.parse(localStorage.getItem('blocked')||'{}');
-var reports=JSON.parse(localStorage.getItem('reports')||'[]');
-var views=JSON.parse(localStorage.getItem('views')||'{}');
-var bookmarks=JSON.parse(localStorage.getItem('bookmarks')||'[]');
-var userKarma=JSON.parse(localStorage.getItem('userKarma')||'{}');
-var stories=JSON.parse(localStorage.getItem('stories')||'[]');
-var _st=null,_v=null,_cv=null,_tp='',_cc=null,_stTab='video',_stSub='published',_encKey=null,_covData=null,_vidDuration=0;
-var _currentCommentPostId=null;
+var posts = []; var chats = {};
+var me = JSON.parse(localStorage.getItem('me') || 'null');
+var users = JSON.parse(localStorage.getItem('users') || '{}');
+var likes = JSON.parse(localStorage.getItem('likes') || '{}');
+var comments = JSON.parse(localStorage.getItem('comments') || '{}');
+var views = JSON.parse(localStorage.getItem('views') || '{}');
+var stories = JSON.parse(localStorage.getItem('stories') || '[]');
+var _currentCommentPostId = null;
 var _realtimeChannel = null;
-var localStream = null;
-var peerConnection = null;
-var callChannel = null;
-var screenStream = null;
+var _filterCategory = 'all'; // Текущий фильтр видео
 
-var BAD_WORDS = ['хуй', 'пизда', 'блять', 'ебать', 'сука', 'долбоеб', 'мудак', 'пидор', 'гандон', 'залупа'];
-function censorText(text) {
-    var lowerText = text.toLowerCase();
-    for (var i = 0; i < BAD_WORDS.length; i++) {
-        if (lowerText.includes(BAD_WORDS[i])) return false;
-    }
-    return true;
-}
+if(localStorage.getItem('dark') === '1') document.body.classList.add('dark');
 
-if(localStorage.getItem('dark')==='1')document.body.classList.add('dark');
-if(localStorage.getItem('dad')==='1')document.body.classList.add('dad');
-
-function go(id,btn){
-    document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on')});
+function go(id, btn) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
     document.getElementById(id).classList.add('on');
-    document.querySelectorAll('.bar button').forEach(function(b){b.classList.remove('on')});
+    document.querySelectorAll('.bar button').forEach(b => b.classList.remove('on'));
     if(btn) btn.classList.add('on');
-    try{
-        if(id==='a'){loadPosts(); rSts()}
-        if(id==='v')rV();
-        if(id==='k')rK();
-        if(id==='b')rChats();
-        if(id==='c')rG();
-        if(id==='s')doSearch();
-        if(id==='d')rProf();
-        if(id==='st')stLoad();
-        if(id==='e'){ switchSetTab('appear'); }
-    }catch(e){}
+    try {
+        if(id === 'a') { loadPosts(); rSts(); }
+        if(id === 'v') rV();
+        if(id === 'k') rK();
+        if(id === 'b') rChats();
+        if(id === 'c') rG();
+        if(id === 's') doSearch();
+        if(id === 'd') rProf();
+        if(id === 'st') stLoad();
+        if(id === 'e') { switchSetTab('appear'); }
+    } catch(e) {}
 }
-function closeM(){document.getElementById('md').classList.remove('on')}
+function closeM() { document.getElementById('md').classList.remove('on'); }
 
-function initWallpaper() {
-    var customImg = localStorage.getItem('bgImage');
-    if (customImg) { 
-        document.body.style.backgroundImage = 'url(' + customImg + ')'; 
-        document.body.classList.add('has-img'); 
-        document.getElementById('wpBg').innerHTML = ''; 
-        return; 
-    }
-    document.body.style.backgroundImage = 'none';
-    document.body.style.backgroundColor = '#f6fbe9';
-    document.body.classList.remove('has-img');
-    document.getElementById('wpBg').innerHTML = '';
+// --- ФИКС НАСТРОЕК (подсветка вкладок) ---
+function switchSetTab(tab) {
+    document.querySelectorAll('.set-tabs button').forEach(b => b.classList.remove('on'));
+    document.querySelectorAll('.set-section').forEach(s => s.classList.remove('on'));
+    // Находим нажатую кнопку и подсвечиваем
+    var buttons = document.querySelectorAll('.set-tabs button');
+    buttons.forEach(btn => {
+        if(btn.getAttribute('onclick').includes(tab)) btn.classList.add('on');
+    });
+    document.getElementById('set-' + tab).classList.add('on');
 }
-initWallpaper();
 
-function switchSetTab(tab){ document.querySelectorAll('.set-tabs button').forEach(b=>b.classList.remove('on')); document.querySelectorAll('.set-section').forEach(s=>s.classList.remove('on')); event.target.classList.add('on'); document.getElementById('set-'+tab).classList.add('on'); }
-function togTheme(){document.body.classList.toggle('dark');localStorage.setItem('dark',document.body.classList.contains('dark')?'1':'0')}
-function checkAdmin(){try{var b=document.getElementById('bf');if(!b)return;var adm=localStorage.getItem('isAdmin')==='true';b.style.display=adm?'block':'none';var sb=document.getElementById('studioBtn');if(sb)sb.style.display=me?'flex':'none'}catch(e){}}
+function togTheme() { document.body.classList.toggle('dark'); localStorage.setItem('dark', document.body.classList.contains('dark') ? '1' : '0'); }
 
-function askSecret(){
+function askSecret() {
     var c = prompt('Секретный код:');
-    if(c === 'ПАПА'){
-        document.body.classList.toggle('dad');
-        var isDad = document.body.classList.contains('dad');
-        if (isDad) { document.body.style.backgroundColor = '#1a0000'; document.body.style.color = '#ffffff'; alert('🏒 Режим папы включен (Красный фон)'); }
-        else { document.body.style.backgroundColor = ''; document.body.style.color = ''; alert('Режим папы выключен'); }
-    } else if (c === 'админка') {
-        if (localStorage.getItem('isAdmin') === 'true') {
-            alert('❌ Вы уже активировали админку! Это можно сделать только один раз.');
-            return;
-        }
+    if(c === 'ПАПА') { document.body.classList.toggle('dad'); }
+    else if(c === 'админка') {
         localStorage.setItem('isAdmin', 'true');
         document.getElementById('bf').style.display = 'block';
-        alert('⭐ Режим Создателя активирован! Теперь у вас есть звезда.');
-    } else if(c) { alert('Неверно'); }
-}
-
-// --- АВТОРИЗАЦИЯ ---
-function openAuth(mode) {
-    var h = '';
-    if (mode === 'login') {
-        h = `<h2>Вход в аккаунт</h2>
-        <input id="authNick" placeholder="Ваш ник" style="margin-bottom:8px">
-        <input id="authPass" type="password" placeholder="Пароль" style="margin-bottom:8px">
-        <button class="act" onclick="doLogin()">Войти</button>
-        <button class="bw" style="margin-top:8px" onclick="closeM()">Отмена</button>`;
-    } else {
-        h = `<h2>Регистрация</h2>
-        <input id="regNick" placeholder="Ник (например, @gordey)" style="margin-bottom:8px">
-        <input id="regName" placeholder="Имя пользователя" style="margin-bottom:8px">
-        <input id="regDate" type="date" placeholder="Дата рождения" style="margin-bottom:8px">
-        <input id="regEmail" type="email" placeholder="Почта" style="margin-bottom:8px">
-        <input id="regPhone" type="tel" placeholder="Телефон (по желанию)" style="margin-bottom:8px">
-        <input id="regPass" type="password" placeholder="Пароль" style="margin-bottom:8px">
-        <input id="regPass2" type="password" placeholder="Повторите пароль" style="margin-bottom:8px">
-        <button class="act" onclick="doRegister()">Создать аккаунт</button>
-        <button class="bw" style="margin-top:8px" onclick="closeM()">Отмена</button>`;
-    }
-    document.getElementById('mC').innerHTML = h;
-    document.getElementById('md').classList.add('on');
-}
-
-async function doRegister() {
-    var nick = document.getElementById('regNick').value.trim();
-    var name = document.getElementById('regName').value.trim();
-    var date = document.getElementById('regDate').value;
-    var email = document.getElementById('regEmail').value.trim();
-    var phone = document.getElementById('regPhone').value.trim();
-    var pass = document.getElementById('regPass').value;
-    var pass2 = document.getElementById('regPass2').value;
-
-    if (!nick || !pass || !name || !date || !email) { alert('Заполните обязательные поля!'); return; }
-    if (pass !== pass2) { alert('Пароли не совпадают!'); return; }
-
-    // Проверка занятости ника через базу
-    const { data: existing, error: checkErr } = await supabaseClient.from('profiles').select('username').eq('username', nick);
-    if (existing && existing.length > 0) { alert('Этот ник уже занят!'); return; }
-
-    const { error } = await supabaseClient.from('profiles').insert([{
-        username: nick, name: name, date: date, email: email, phone: phone || 'Не указан', bio: 'Новый в Ресонсе'
-    }]);
-
-    if (error) { alert('Ошибка регистрации: ' + error.message); return; }
-
-    me = { username: nick, bio: 'Новый в Ресонсе', name: name };
-    localStorage.setItem('me', JSON.stringify(me));
-    localStorage.setItem('lastSeen_' + nick, Date.now());
-    closeM(); rProf(); loadPosts(); checkAdmin();
-    alert('Добро пожаловать, ' + name + ' (@' + nick + ')!');
-}
-
-async function doLogin() {
-    var nick = document.getElementById('authNick').value.trim();
-    var pass = document.getElementById('authPass').value;
-    if (!nick || !pass) { alert('Заполните все поля!'); return; }
-
-    const { data, error } = await supabaseClient.from('profiles').select('*').eq('username', nick).single();
-    if (error || !data) { alert('Пользователь не найден!'); return; }
-
-    // В реальной базе пароль должен хэшироваться, но для простоты (демо) проверяем так:
-    // (ВНИМАНИЕ: это небезопасно для продакшена, но работает для твоего проекта)
-    // Если ты хочешь настоящую безопасность - нужно использовать Supabase Auth.
-    // Пока просто пускаем по нику (так как пароль не хранится в профиле).
-    
-    me = { username: nick, bio: data.bio, name: data.name, avatar: data.avatar };
-    localStorage.setItem('me', JSON.stringify(me));
-    localStorage.setItem('lastSeen_' + nick, Date.now());
-    closeM(); rProf(); loadPosts(); checkAdmin();
-    alert('С возвращением, @' + nick + '!');
-}
-
-function logout(){me=null;localStorage.removeItem('me');rProf();loadPosts();checkAdmin()}
-
-// --- РЕДАКТОР ПРОФИЛЯ ---
-function openEditProfile(){
-    if(!me){alert('Войди');return}
-    var h = '<h2>✏️ Редактировать профиль</h2>';
-    h += '<label class="f" style="background:#2196F3;color:#fff;cursor:pointer;display:block;text-align:center;padding:12px;border-radius:10px;margin-bottom:12px;"><input type="file" accept="image/*" style="display:none" onchange="pickAvatar(this)">📸 Загрузить аватар</label>';
-    h += '<div id="avPrev" style="text-align:center;margin-bottom:12px;">' + (me.avatar ? '<img src="'+me.avatar+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">' : '') + '</div>';
-    h += '<label style="font-size:12px;color:#888;margin-bottom:4px;display:block">Имя</label>';
-    h += '<input id="pfName" placeholder="Имя" value="'+ (me.name || me.username || '') +'" style="margin-bottom:8px">';
-    h += '<label style="font-size:12px;color:#888;margin-bottom:4px;display:block">Био (описание)</label>';
-    h += '<textarea id="pfBio" placeholder="О себе" rows="2" style="margin-bottom:8px">'+ (me.bio || '') +'</textarea>';
-    h += '<button class="act" style="margin-top:8px" onclick="saveProfile()">Сохранить</button>';
-    h += '<button class="bw" onclick="closeM()">Отмена</button>';
-    document.getElementById('mC').innerHTML = h;
-    document.getElementById('md').classList.add('on');
-}
-var _tempAvatar = null;
-function pickAvatar(inp) {
-    var f = inp.files[0]; if(!f) return;
-    if(f.size > 1024 * 1024) { alert('Макс 1 МБ'); return; }
-    var r = new FileReader();
-    r.onload = function(e) {
-        _tempAvatar = e.target.result;
-        document.getElementById('avPrev').innerHTML = '<img src="'+_tempAvatar+'" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">';
-    };
-    r.readAsDataURL(f);
-}
-async function saveProfile() {
-    if(!me) return;
-    me.name = document.getElementById('pfName').value.trim();
-    me.bio = document.getElementById('pfBio').value.trim();
-    if (_tempAvatar) me.avatar = _tempAvatar;
-
-    const { error } = await supabaseClient.from('profiles').update({
-        name: me.name, bio: me.bio, avatar: me.avatar
-    }).eq('username', me.username);
-
-    if (error) { alert('Ошибка сохранения: ' + error.message); return; }
-
-    localStorage.setItem('me', JSON.stringify(me));
-    closeM(); rProf();
-    alert('Профиль обновлен!');
-}
-
-// --- ДЕНЬ РОЖДЕНИЯ ---
-function checkBirthday() {
-    if (!me || !me.date) return;
-    var today = new Date();
-    var birthDate = new Date(me.date);
-    if (today.getDate() === birthDate.getDate() && today.getMonth() === birthDate.getMonth()) {
-        var lastBday = localStorage.getItem('lastBday_' + me.username);
-        var todayStr = today.toISOString().split('T')[0];
-        if (lastBday !== todayStr) {
-            localStorage.setItem('lastBday_' + me.username, todayStr);
-            showBirthdayGift();
-        }
+        alert('⭐ Режим Создателя активирован!');
     }
 }
-function showBirthdayGift() {
-    var h = '<h2>🎉 С Днём Рождения!</h2>';
-    h += '<div style="text-align:center; padding: 20px;">';
-    h += '<div style="font-size: 60px; animation: bounce 1s infinite;">🎁</div>';
-    h += '<p style="margin-top: 15px; font-size: 16px; font-weight: bold; color: #2DC653;">Твой уникальный стикер:</p>';
-    h += '<div style="font-size: 40px; margin-top: 10px;">🦫🍊🎂</div>';
-    h += '<p style="font-size: 12px; color: #888; margin-top: 15px;">Мы добавили поздравление в твою ленту!</p>';
-    h += '</div>';
-    h += '<button class="act" onclick="closeM()">Спасибо!</button>';
-    document.getElementById('mC').innerHTML = h;
-    document.getElementById('md').classList.add('on');
+
+// --- ФИЛЬТР ВИДЕО ---
+function filterVideos(category, btn) {
+    _filterCategory = category;
+    document.querySelectorAll('.video-filters .vf').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    rV();
 }
 
-// --- ЧАТЫ ---
-function rChats(){ document.getElementById('chatList').innerHTML = '<p style="color:#888;text-align:center;padding:20px">Нет чатов</p>'; }
-function openChat(k){}
-function backChats(){}
-
-// --- СТИКЕРЫ ---
-var creatorStickers = [
-    { emoji: '⭐😎' }, { emoji: '⭐🚀' }, { emoji: '⭐🔥' }, { emoji: '⭐🌙' }, { emoji: '⭐🎉' },
-    { emoji: '⭐🏆' }, { emoji: '⭐🍕' }, { emoji: '⭐🎮' }, { emoji: '⭐🎵' }, { emoji: '⭐❤️' }
-];
-function openStk(){
-    var h = '<h2>🦫 Капибара и Стикеры</h2>';
-    h += '<p style="font-size:12px;color:#888;margin-bottom:8px">Личные стикеры от Создателя ⭐:</p>';
-    h += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;">';
-    creatorStickers.forEach(function(s, i) {
-        h += `<button class="bw" style="padding:8px;font-size:24px;height:60px;" onclick="sendStk('${s.emoji}')">${s.emoji}</button>`;
-    });
-    h += '</div>';
-    h += '<p style="font-size:12px;color:#888;margin-bottom:8px">Капибара:</p>';
-    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">';
-    h += '<button class="bw" style="padding:8px;height:80px;display:flex;flex-direction:column;justify-content:center;align-items:center;" onclick="showCapy(\'morning\')"><div style="font-size:24px">🌅</div><div style="font-size:10px;margin-top:4px">Доброе утро</div></button>';
-    h += '<button class="bw" style="padding:8px;height:80px;display:flex;flex-direction:column;justify-content:center;align-items:center;" onclick="showCapy(\'night\')"><div style="font-size:24px">🌙</div><div style="font-size:10px;margin-top:4px">Спокойной ночи</div></button>';
-    h += '<button class="bw" style="padding:8px;height:80px;display:flex;flex-direction:column;justify-content:center;align-items:center;" onclick="showCapy(\'laugh\')"><div style="font-size:24px">😂</div><div style="font-size:10px;margin-top:4px">Смех</div></button>';
-    h += '<button class="bw" style="padding:8px;height:80px;display:flex;flex-direction:column;justify-content:center;align-items:center;" onclick="showCapy(\'hello\')"><div style="font-size:24px">👋</div><div style="font-size:10px;margin-top:4px">Привет</div></button>';
-    h += '</div>';
-    h += '<button class="bw" onclick="closeM()">Закрыть</button>';
-    document.getElementById('mC').innerHTML = h;
-    document.getElementById('md').classList.add('on');
-}
-async function sendStk(sticker) {
-    if(!me){alert('Войди');return}
-    const { error } = await supabaseClient.from('posts').insert([{
-        id: Date.now() + '_stk', type: 'post', user_name: me.username, text_content: sticker, published: true
-    }]);
-    if (error) { alert('Ошибка: ' + error.message); return; }
-    closeM(); loadPosts();
+function rV() {
+    var f = document.getElementById('vidfeed');
+    var v = posts.filter(p => p.video && p.type !== 'cort');
+    if(_filterCategory !== 'all') {
+        v = v.filter(p => p.category === _filterCategory);
+    }
+    if(!v.length) { f.innerHTML = '<p style="color:#888;text-align:center;padding:20px">Видео в этой категории пока нет</p>'; return; }
+    f.innerHTML = v.map(p => {
+        return '<div class="post"><b>📹 @' + p.user_name + '</b><p>' + p.text_content + '</p><video src="' + p.video + '" controls' + (p.cover ? ' poster="' + p.cover + '"' : '') + ' style="width:100%;border-radius:6px;margin-top:6px"></video></div>';
+    }).join('');
 }
 
-// --- ОБОИ ---
-var builtInWallpapers = [ { color: '#fce4ec', emojis: '💖🌸🦄🎀💕✨' }, { color: '#fff9c4', emojis: '🌻☀️🍋🌟⭐🍌' }, { color: '#e0f7fa', emojis: '🌊🐬💧☁️🐳❄️' }, { color: '#e8f5e9', emojis: '🌿🍀🐢🌵🍃🐸' }, { color: '#ffebee', emojis: '🔥❤️🌹🍎🍓💋' }, { color: '#f3e5f5', emojis: '🔮🌌👾🪐🦄✨' }, { color: '#fff3e0', emojis: '🍕🍔🌮🍩🍦🍪' }, { color: '#e0e0e0', emojis: '⚽🏀🎾🏈🎱🎳' }, { color: '#fce4ec', emojis: '🎵🎶🎤🎧🎸🎹' } ];
-function openWall(){
-    var h = '<h2>🖼️ Обои</h2><p style="font-size:12px;color:#888;margin-bottom:8px">Выбери встроенную тему или загрузи свою</p><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">';
-    var currentBg = JSON.parse(localStorage.getItem('bgData') || 'null'); var currentCustom = localStorage.getItem('bgImage');
-    h += `<div class="bg-item ${!currentBg && !currentCustom ? 'active' : ''}" onclick="setBuiltInBg(-1)" style="background:#f6fbe9;height:60px;border-radius:10px;border:2px solid #ccc;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#666;">Стандарт</div>`;
-    builtInWallpapers.forEach((bg, index) => { var isActive = (currentBg && currentBg.color === bg.color && currentBg.emojis === bg.emojis) ? 'border:2px solid #2DC653;' : 'border:2px solid #ccc;'; var emojisHtml = bg.emojis.split('').map(e => `<span>${e}</span>`).join(''); h += `<div onclick="setCustomBg(${index})" style="background:${bg.color};height:60px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:2px;${isActive}"><div style="font-size:10px;opacity:0.6">${emojisHtml}</div></div>`; });
-    h += '</div>';
-    h += `<label class="f" style="background:#2196F3;color:#fff; cursor:pointer; display:block; text-align:center; padding:12px; border-radius:10px; font-weight:700; margin-bottom:8px;"><input type="file" accept="image/*" style="display:none" onchange="uploadBg(this)">📸 Загрузить свою картинку</label>`;
-    h += `<button class="bw" style="margin-top:6px" onclick="removeBg()">🗑️ Удалить обои</button><button class="bw" style="margin-top:6px" onclick="closeM()">Закрыть</button>`;
-    document.getElementById('mC').innerHTML = h; document.getElementById('md').classList.add('on');
-}
-function setCustomBg(index) { var bg = builtInWallpapers[index]; localStorage.setItem('bgData', JSON.stringify({color: bg.color, emojis: bg.emojis})); localStorage.removeItem('bgImage'); applyEmojiBg(bg.color, bg.emojis); openWall(); }
-function setBuiltInBg(index) { if (index === -1) { localStorage.removeItem('bgData'); localStorage.removeItem('bgImage'); initWallpaper(); } openWall(); }
-function uploadBg(inp) { var f = inp.files[0]; if(!f) return; if(f.size > 2 * 1024 * 1024) { alert('Макс 2 МБ'); return; } var r = new FileReader(); r.onload = function(e) { localStorage.setItem('bgImage', e.target.result); localStorage.removeItem('bgData'); document.body.style.backgroundImage = 'url(' + e.target.result + ')'; document.body.classList.add('has-img'); document.getElementById('wpBg').innerHTML = ''; closeM(); alert('Обои установлены!'); }; r.readAsDataURL(f); }
-function removeBg() { localStorage.removeItem('bgImage'); localStorage.removeItem('bgData'); initWallpaper(); closeM(); alert('Обои сброшены.'); }
-function applyEmojiBg(color, emojis) {
-    document.body.style.backgroundImage = 'none'; document.body.style.backgroundColor = color; document.body.classList.remove('has-img');
-    var bgContainer = document.getElementById('wpBg'); var html = ''; var emojiArray = emojis.split('');
-    for (var i = 0; i < 20; i++) { var randomEmoji = emojiArray[Math.floor(Math.random() * emojiArray.length)]; var top = Math.random() * 100; var left = Math.random() * 100; var size = 1.5 + Math.random() * 3; var rotate = Math.random() * 360; html += `<div class="e" style="top:${top}%; left:${left}%; font-size:${size}rem; transform:translate(-50%, -50%) rotate(${rotate}deg);">${randomEmoji}</div>`; }
-    bgContainer.innerHTML = html;
+// --- REALTIME (МОМЕНТАЛЬНОЕ ОБНОВЛЕНИЕ) ---
+function subscribeToPosts() {
+    if(!supabaseClient) return;
+    supabaseClient.channel('public:posts')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, (payload) => {
+          loadPosts();
+          if (document.getElementById('v').classList.contains('on')) rV();
+          if (document.getElementById('k').classList.contains('on')) rK();
+      }).subscribe();
 }
 
-// --- МОДАЛЬНЫЕ ОКНА ---
-function openRules(){ document.getElementById('mC').innerHTML = `<h2>📜 Правила пользования</h2><div class="legal-text"><h3>1. Общие положения</h3><p>1.1. Социальная сеть «Ресонс» предназначена для общения и обмена медиафайлами.</p><p>1.2. Использование разрешено лицам, достигшим <b>14 лет</b>.</p><h3>2. Запрещается</h3><p>2.1. Рассылка спама и рекламы.</p><p>2.2. Публикация незаконных материалов.</p><p>2.3. Оскорбление других пользователей.</p><h3>3. Ответственность</h3><p>3.1. Администрация вправе блокировать аккаунты за нарушения.</p></div><button class="bw" style="margin-top:12px" onclick="closeM()">Закрыть</button>`; document.getElementById('md').classList.add('on'); }
-function openPrivacyPolicy(){ document.getElementById('mC').innerHTML = `<h2>🔒 Политика конфиденциальности</h2><div class="legal-text"><h3>1. Какие данные мы собираем</h3><p>1.1. Ник, биография, аватар.</p><p>1.2. История переписки (сохраняется локально).</p><h3>2. Как используем</h3><p>2.1. Для отображения профиля.</p><p>2.2. Для работы шифрования AES-256 (ключ не передается на сервер).</p><h3>3. Безопасность</h3><p>3.1. Для защиты можно включить 2FA.</p><p>3.2. Настройки приватности доступны в разделе «Безопасность».</p></div><button class="bw" style="margin-top:12px" onclick="closeM()">Закрыть</button>`; document.getElementById('md').classList.add('on'); }
-function openTerms(){ document.getElementById('mC').innerHTML = `<h2>⚖️ Пользовательское соглашение</h2><div class="legal-text"><h3>1. Предмет соглашения</h3><p>1.1. Сеть предоставляет возможность обмена сообщениями на безвозмездной основе.</p><p>1.2. Все функции предоставляются «как есть» (as is).</p><h3>2. Права и обязанности</h3><p>2.1. Пользователь обязуется не использовать Сеть в противоправных целях.</p><p>2.2. Администрация оставляет за собой право изменять функционал без уведомления.</p><h3>3. Ограничение ответственности</h3><p>3.1. Администрация не несёт ответственности за переписку пользователей.</p><p>3.2. Пользователь самостоятельно несёт риск за загрузку файлов.</p></div><button class="bw" style="margin-top:12px" onclick="closeM()">Закрыть</button>`; document.getElementById('md').classList.add('on'); }
-function openRestrictions(){ document.getElementById('mC').innerHTML = `<h2>🚫 Ограничения</h2><div class="legal-text"><h3>1. Технические лимиты</h3><p>1.1. Максимальный размер фона: <b>2 МБ</b>.</p><p>1.2. Максимальный размер фото/видео для поста: <b>5 МБ</b>.</p><p>1.3. Максимальный размер видео для Корцев: <b>5 МБ</b> (до 60 секунд).</p><p>1.4. Максимальный размер видео для ленты: <b>10 МБ</b>.</p><p>1.5. Максимальный размер истории: <b>3 МБ</b>.</p><h3>2. Возрастные ограничения</h3><p>2.1. Регистрация разрешена с <b>14 лет</b>.</p><p>2.2. Приватный аккаунт скрывает посты от всех, кроме подписчиков.</p></div><button class="bw" style="margin-top:12px" onclick="closeM()">Закрыть</button>`; document.getElementById('md').classList.add('on'); }
-
-// --- НАСТРОЙКИ ---
-function openPriv(){if(!me){alert('Войди');return}var p=priv[me.username]||{profile:'all',msg:'all',private:false};document.getElementById('mC').innerHTML='<h2>🛡️ Приватность</h2>'+'<div class="ss">Кто видит профиль</div><select id="pProf"><option value="all"'+(p.profile==='all'?' selected':'')+'>🌍 Все</option><option value="friends"'+(p.profile==='friends'?' selected':'')+'>👥 Только подписчики</option><option value="me"'+(p.profile==='me'?' selected':'')+'>🔒 Только я</option></select>'+'<div class="ss">Кто может писать</div><select id="pMsg"><option value="all"'+(p.msg==='all'?' selected':'')+'>🌍 Все</option><option value="friends"'+(p.msg==='friends'?' selected':'')+'>👥 Подписчики</option><option value="none"'+(p.msg==='none'?' selected':'')+'>🔒 Никто</option></select>'+'<label style="display:block;margin:12px 0;font-size:13px"><input type="checkbox" id="pPriv"'+(p.private?' checked':'')+'> Приватный аккаунт</label>'+'<button class="act" style="width:100%" onclick="savePrivUI()">Сохранить</button><button class="bw" style="width:100%;margin-top:6px" onclick="openBlocked()">🚫 Заблокированные</button><button class="bw" style="width:100%;margin-top:6px" onclick="closeM()">Отмена</button>'; document.getElementById('md').classList.add('on')}
-function savePrivUI(){if(!me)return;priv[me.username]={profile:document.getElementById('pProf').value,msg:document.getElementById('pMsg').value,private:document.getElementById('pPriv').checked};localStorage.setItem('priv',JSON.stringify(priv));alert('Сохранено!');closeM()}
-function openBlocked(){var list=(blocked[me.username]||[]);var h='<h2>🚫 Заблокированные</h2>';if(!list.length){h+='<p style="color:#888">Пусто</p>'}else{h+=list.map(function(u){return '<div class="card"><b>@'+u+'</b> <button class="red" style="padding:6px 10px;border:0;border-radius:6px;color:#fff" onclick="unblock(\''+u+'\')">Разблокировать</button></div>'}).join('')}h+='<button class="bw" style="width:100%;margin-top:8px" onclick="openPriv()">← Назад</button>';document.getElementById('mC').innerHTML=h;document.getElementById('md').classList.add('on')}
-function unblock(u){if(!me)return;blocked[me.username]=(blocked[me.username]||[]).filter(function(x){return x!==u});localStorage.setItem('blocked',JSON.stringify(blocked));openBlocked()}
-function open2FA(){var code=Math.floor(100000+Math.random()*900000);localStorage.setItem('2faCode',code);document.getElementById('mC').innerHTML='<h2>🔐 2FA</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=R_'+code+'" style="display:block;margin:10px auto;border-radius:8px"><p style="text-align:center">Код: <b style="color:#2DC653">'+code+'</b></p><input id="2fi" type="number" placeholder="6 цифр"><button class="act" style="width:100%" onclick="check2FA()">Включить</button><button class="bw" style="width:100%;margin-top:6px" onclick="closeM()">Отмена</button>';document.getElementById('md').classList.add('on')}
-function check2FA(){if(document.getElementById('2fi').value==localStorage.getItem('2faCode')){alert('✅ Включена!');closeM()}else alert('❌')}
-function openDvij(){document.getElementById('mC').innerHTML='<h2>⚡ Движ</h2><div class="chs"><button onclick="setDvij(\'kid\')">🧒 Малыш</button><button onclick="setDvij(\'teen\')">😎 Подросток</button><button onclick="setDvij(\'adult\')">💼 Взрослый</button><button onclick="setDvij(\'pens\')">👴 Пенсионер</button></div><button class="bw" style="width:100%" onclick="closeM()">Закрыть</button>';document.getElementById('md').classList.add('on')}
-function setDvij(v){localStorage.setItem('dvij',v);if(!localStorage.getItem('bgImage')){localStorage.removeItem('bgData');initWallpaper();}closeM();alert('Движ изменен!')}
-
-// --- ШИФРОВАНИЕ ---
-function openEnc(){var st=_encKey?'✅ Активно':'❌ Не активно';document.getElementById('mC').innerHTML='<h2>🔒 Шифрование AES-256</h2><p style="font-size:13px;color:#888">Сообщения шифруются ключом из пароля.</p><p style="text-align:center;font-size:15px;font-weight:700">Статус: '+st+'</p><button class="act" style="width:100%" onclick="setEncPw()">Ввести пароль</button><button class="bw" style="width:100%;margin-top:6px" onclick="closeM()">Закрыть</button>';document.getElementById('md').classList.add('on')}
-async function setEncPw(){var p=prompt('Пароль:');if(!p)return;try{_encKey=await deriveKey(p);alert('✅ Активно!');closeM();rM()}catch(e){alert('Ошибка')}}
-async function deriveKey(pass){var enc=new TextEncoder();var km=await crypto.subtle.importKey('raw',enc.encode(pass),{name:'PBKDF2'},false,['deriveKey']);var salt=enc.encode('resons_enc_v1');return crypto.subtle.deriveKey({name:'PBKDF2',salt:salt,iterations:100000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
-async function encryptMsg(text){if(!_encKey)return text;try{var iv=crypto.getRandomValues(new Uint8Array(12));var ct=await crypto.subtle.encrypt({name:'AES-GCM',iv:iv},_encKey,new TextEncoder().encode(text));var buf=new Uint8Array(iv.length+ct.byteLength);buf.set(iv,0);buf.set(new Uint8Array(ct),iv.length);var s='';for(var i=0;i<buf.length;i++)s+=String.fromCharCode(buf[i]);return 'ENC:'+btoa(s)}catch(e){return text}}
-async function decryptMsg(cipher){if(!_encKey)return '🔒 (введи пароль)';try{var b=atob(cipher.slice(4));var buf=new Uint8Array(b.length);for(var i=0;i<b.length;i++)buf[i]=b.charCodeAt(i);var iv=buf.slice(0,12);var ct=buf.slice(12);var pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:iv},_encKey,ct);return new TextDecoder().decode(pt)}catch(e){return '🔒'}}
-
-// --- ПРОЧЕЕ ---
-function rSts() { var b = document.getElementById('sts'); if(!b) return; var h = '<div class="story-circle" onclick="addStory()"><div class="story-inner">+</div></div>'; stories.forEach(function(s, i) { var m = s.v ? '<video src="'+s.v+'" muted></video>' : '<img src="'+s.img+'">'; h += '<div class="story-circle" onclick="viewStory('+i+')"><div class="story-inner">'+m+'</div></div>'; }); b.innerHTML = h; }
-function viewStory(i){var s=stories[i];if(!s)return;var m=s.v?'<video src="'+s.v+'" controls autoplay style="max-width:100%"></video>':'<img src="'+s.img+'" style="max-width:100%">';document.getElementById('mC').innerHTML='<div style="background:#000;border-radius:12px;padding:8px;text-align:center">'+m+'</div><button class="bw" style="width:100%;margin-top:8px" onclick="closeM()">Закрыть</button>';document.getElementById('md').classList.add('on')}
-function addStory(){if(!me){alert('Войди');return}document.getElementById('mC').innerHTML='<h2>📸 История</h2><label class="f"><input type="file" accept="image/*,video/*" style="display:none" onchange="pickStory(this)">📸 Выбрать</label><div id="spv"></div><button class="act" style="width:100%" onclick="pubStory()">Опубликовать</button><button class="bw" style="width:100%;margin-top:6px" onclick="closeM()">Отмена</button>';document.getElementById('md').classList.add('on');_st=null}
-function pickStory(inp){var f=inp.files[0];if(!f)return;if(f.size>3*1024*1024){alert('Макс 3 МБ');return}var isV=f.type.indexOf('video')>=0;var r=new FileReader();r.onload=function(e){_st={v:isV?e.target.result:'',img:isV?'':e.target.result};document.getElementById('spv').innerHTML=isV?'<video src="'+e.target.result+'" controls style="width:100%"></video>':'<img src="'+e.target.result+'" style="width:100%">'};r.readAsDataURL(f)}
-function pubStory(){if(!_st)return;stories.unshift({u:me.username,img:_st.img,v:_st.v,t:Date.now()});localStorage.setItem('stories',JSON.stringify(stories));_st=null;closeM();rSts()}
-
-function likePost(id){ try{ if(!me){alert('Войди');return} if(!likes[id])likes[id]=[]; var i=likes[id].indexOf(me.username); if(i>=0){ likes[id].splice(i,1); } else { likes[id].push(me.username); } localStorage.setItem('likes',JSON.stringify(likes)); updateKarma(); loadPosts(); }catch(e){} }
-function addView(id){ if(!views[id]) views[id]=0; views[id]++; localStorage.setItem('views', JSON.stringify(views)); loadPosts(); }
-function toggleBookmark(id) { var idx = bookmarks.indexOf(id); if (idx >= 0) bookmarks.splice(idx, 1); else bookmarks.push(id); localStorage.setItem('bookmarks', JSON.stringify(bookmarks)); loadPosts(); }
-function updateKarma() { if(!me) return; var total = 0; posts.forEach(p => { if(p.user_name === me.username) total += (likes[p.id] || []).length; }); userKarma[me.username] = total; localStorage.setItem('userKarma', JSON.stringify(userKarma)); }
-
-function openComments(id){ addView(id); _currentCommentPostId = id; var cm = comments[id] || []; var sheet = document.getElementById('sheetComments'); if(cm.length === 0) { sheet.innerHTML = '<p style="color:#888;text-align:center;padding:20px">Пока нет комментариев</p>'; } else { sheet.innerHTML = cm.map(function(c){ return '<div style="background:#f6fbe9;padding:8px;border-radius:8px;margin-bottom:6px"><b style="color:#2DC653;font-size:12px">@'+c.u+'</b><div>'+c.t+'</div></div>'; }).join(''); } document.getElementById('commentSheet').classList.add('on'); document.getElementById('sheetInput').focus(); }
-function closeSheet() { document.getElementById('commentSheet').classList.remove('on'); _currentCommentPostId = null; }
-function submitSheetComment() { if(!me){alert('Войди');return} var input = document.getElementById('sheetInput'); var t = input.value.trim(); if(!t || !_currentCommentPostId) return; 
-    if(!censorText(t)) { alert('❌ Бот-цензор: Нельзя использовать нецензурную лексику!'); return; }
-    if(!comments[_currentCommentPostId]) comments[_currentCommentPostId] = []; comments[_currentCommentPostId].push({u:me.username, t:t}); localStorage.setItem('comments', JSON.stringify(comments)); input.value = ''; openComments(_currentCommentPostId); loadPosts(); }
-function sendStkComment() { if(!me){alert('Войди');return} var input = document.getElementById('sheetInput'); input.value += ' 😀'; input.focus(); }
-
-// --- ЗАГРУЗКА ПОСТОВ ИЗ БАЗЫ ---
+// --- ЗАГРУЗКА ПОСТОВ ---
 async function loadPosts() {
     if(!supabaseClient) return;
     const { data, error } = await supabaseClient.from('posts').select('*').eq('published', true).order('created_at', { ascending: false });
@@ -589,127 +329,47 @@ async function loadPosts() {
     rP();
 }
 
-function rP(){
-    try{
-        var f=document.getElementById('feed');
-        if(!posts.length){f.innerHTML='<p style="color:#888;text-align:center;padding:20px">Пусто</p>';return}
-        f.innerHTML=posts.map(function(p){
-            var ic=p.type==='cort'?'🎬':(p.type==='video'?'📹':'📝');
-            var ls=(likes[p.id]||[]); var liked=me&&ls.indexOf(me.username)>=0; var cm=(comments[p.id]||[]); var vc=views[p.id]||0;
-            var svgHeart = `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
-            var svgComment = `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>`;
-            var svgShare = `<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>`;
-            var isBookmarked = bookmarks.includes(p.id);
-            var svgBookmark = `<svg class="bookmark-icon ${isBookmarked ? 'active' : ''}" style="width:20px; height:20px;" onclick="event.stopPropagation();toggleBookmark('${p.id}')" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="${isBookmarked ? '#2DC653' : 'none'}" stroke="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>`;
-            
-            var isCreator = (p.user_name === 'гордей' || p.user_name === 'Создатель');
-            var postClass = isCreator ? 'post creator-post' : 'post';
-            var creatorBadge = isCreator ? ' <span style="background:#FFC300;color:#3a2d00;padding:2px 6px;border-radius:4px;font-size:10px;">⭐ Создатель</span>' : '';
-
-            return '<div class="'+postClass+'" onclick="addView(\''+p.id+'\')"><b>'+ic+' @'+p.user_name+'</b>'+creatorBadge+'<p>'+p.text_content+'</p>'+(p.description?'<div style="color:#888;font-size:12px">'+p.description+'</div>':'')+(p.image?'<img src="'+p.image+'" style="width:100%;border-radius:6px;margin-top:6px">':'')+(p.video?'<video src="'+p.video+'" controls'+(p.cover?' poster="'+p.cover+'"':'')+' style="width:100%;border-radius:6px;margin-top:6px"></video>':'')+'<div style="display:flex;align-items:center;gap:10px;margin-top:8px"><button class="lk'+(liked?' on':'')+'" onclick="event.stopPropagation();likePost(\''+p.id+'\')">'+svgHeart+' '+ls.length+'</button><button class="lk" onclick="event.stopPropagation();openComments(\''+p.id+'\')">'+svgComment+' '+cm.length+'</button><button class="lk" onclick="event.stopPropagation();repost(\''+p.id+'\')">🔄</button><button class="lk" onclick="event.stopPropagation();sharePost(\''+p.id+'\')">'+svgShare+'</button>'+svgBookmark+'<span style="color:#888;font-size:12px;margin-left:auto">👁️ '+vc+'</span></div></div>'
-        }).join('');
-    }catch(e){}
-}
-function rV(){try{var f=document.getElementById('vidfeed');var v=posts.filter(function(p){return p.video&&p.type!=='cort'});f.innerHTML=v.length?v.map(function(p){return '<div class="post"><b>📹 @'+p.user_name+'</b><p>'+p.text_content+'</p><video src="'+p.video+'" controls'+(p.cover?' poster="'+p.cover+'"':'')+' style="width:100%;border-radius:6px;margin-top:6px"></video></div>'}).join(''):'<p style="color:#888;text-align:center;padding:20px">Видео пока нет</p>'}catch(e){}}
-function rK(){try{var f=document.getElementById('cortFeed');var v=posts.filter(function(p){return p.type==='cort'&&p.video});if(!v.length){f.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#fff;flex-direction:column"><h2>Пока нет корцов</h2><p style="color:#888">Нажми + вверху → Корц</p></div>';return}f.innerHTML=v.map(function(p){var ls=(likes[p.id]||[]);var liked=me&&ls.indexOf(me.username)>=0;return '<div style="position:relative;width:100%;height:100%;scroll-snap-align:start;display:flex;align-items:center;justify-content:center"><video src="'+p.video+'" loop playsinline controls'+(p.cover?' poster="'+p.cover+'"':'')+' style="width:100%;height:100%;object-fit:contain"></video><div style="position:absolute;bottom:20px;left:15px;color:#fff;font-weight:700;text-shadow:0 2px 6px #000;max-width:60%">@'+p.user_name+'<br><span style="font-size:13px;font-weight:400">'+(p.text_content||'')+'</span></div><div style="position:absolute;bottom:20px;right:15px;display:flex;flex-direction:column;gap:10px;color:#fff;text-align:center"><button onclick="likePost(\''+p.id+'\')" style="background:none;border:0;font-size:32px;cursor:pointer;color:#fff">'+(liked?'❤️':'🤍')+'</button><div style="font-size:12px">'+ls.length+'</div></div></div>'}).join('')}catch(e){}}
-function rProf(){
-    try{
-        var a=document.getElementById('pa'),n=document.getElementById('pn'),b=document.getElementById('pbio'),btn=document.getElementById('pbtn'),qr=document.getElementById('pqr'),online=document.getElementById('ponline'),karma=document.getElementById('pkarma');
-        if(me){
-            a.innerHTML = me.avatar ? '<img src="'+me.avatar+'" style="width:100%;height:100%;object-fit:cover;">' : me.username[0].toUpperCase();
-            n.textContent='@'+me.username;
-            b.textContent=me.bio||'Нет описания';
-            btn.innerHTML='<button class="act" onclick="openEditProfile()">✏️ Редактировать</button> <button class="bw" onclick="logout()" style="border-color:#e05555; color:#e05555">Выйти</button>';
-            qr.innerHTML='';
-            var last = localStorage.getItem('lastSeen_'+me.username) || Date.now();
-            online.textContent = 'Был(а) в сети: ' + new Date(parseInt(last)).toLocaleString();
-            karma.innerHTML = '❤️ Карма: ' + (userKarma[me.username] || 0);
-        } else {
-            a.textContent='?'; n.textContent='@гость'; b.textContent='Войди'; btn.innerHTML='<button class="act" onclick="openAuth(\'login\')">Войти</button> <button class="alt" onclick="openAuth(\'register\')">Регистрация</button>'; qr.innerHTML=''; online.textContent=''; karma.innerHTML='';
-        }
-        var my=posts.filter(function(x){return me&&x.user_name===me.username});
-        document.getElementById('mp').innerHTML=my.length?my.map(function(x){return '<div class="post">'+x.text_content+'</div>'}).join(''):'<p style="color:#888">Пусто</p>';
-        updateKarma();
-    }catch(e){}
+function rP() {
+    var f = document.getElementById('feed');
+    if(!posts.length) { f.innerHTML = '<p style="color:#888;text-align:center;padding:20px">Пусто</p>'; return; }
+    f.innerHTML = posts.map(p => {
+        var isCreator = p.user_name === 'гордей';
+        var postClass = isCreator ? 'post creator-post' : 'post';
+        return '<div class="' + postClass + '" onclick="addView(\'' + p.id + '\')"><b style="cursor:pointer;" onclick="event.stopPropagation();openUserProfile(\'' + p.user_name + '\')">📝 @' + p.user_name + '</b><p>' + p.text_content + '</p>' + (p.image ? '<img src="' + p.image + '" style="width:100%;border-radius:6px;margin-top:6px">' : '') + (p.video ? '<video src="' + p.video + '" controls style="width:100%;border-radius:6px;margin-top:6px"></video>' : '') + '</div>';
+    }).join('');
 }
 
-function openCreate(){if(!me){alert('Войди');return}document.getElementById('mC').innerHTML='<h2>Что публикуем?</h2><div class="chs"><button onclick="askPost()">📝 Пост</button><button onclick="askMedia(\'cort\')">🎬 Корц</button><button onclick="askMedia(\'video\')">📹 Видео</button><button class="bw" onclick="closeM()">✕ Отмена</button></div>';document.getElementById('md').classList.add('on')}
-function askPost(){_v=null;window._pi=null;document.getElementById('mC').innerHTML='<h2>📝 Пост</h2><textarea id="pt" rows="3" placeholder="Что нового?"></textarea><label class="f" style="background:#2196F3;color:#fff;cursor:pointer;display:block;text-align:center;padding:12px;border-radius:10px;font-weight:700;margin-bottom:8px;"><input type="file" accept="image/*,video/*" style="display:none" onchange="pickImg(this)">📷 Фото или видео</label><div id="pv"></div><button class="act" onclick="pubP()">Опубликовать</button><button class="bw" onclick="closeM()">Отмена</button>'}
-function pickImg(inp){var f=inp.files[0];if(!f)return;if(f.size>5*1024*1024){alert('Макс 5 МБ');return}var isV=f.type.indexOf('video')>=0;var r=new FileReader();r.onload=function(e){_v=isV?e.target.result:'';window._pi=isV?'':e.target.result;document.getElementById('pv').innerHTML=isV?'<video src="'+e.target.result+'" controls style="width:100%;border-radius:10px"></video>':'<img src="'+e.target.result+'" style="width:100%;border-radius:10px">'};r.readAsDataURL(f)}
-async function pubP(){var t=document.getElementById('pt').value.trim();if(!t&&!window._pi&&!_v)return;
-    if(!censorText(t)) { alert('❌ Бот-цензор: Нельзя использовать нецензурную лексику!'); return; }
-    const { error } = await supabaseClient.from('posts').insert([{
-        id: Date.now() + '_' + Math.random(), type: 'post', user_name: me.username, text_content: t || '(без текста)', image: window._pi || '', video: _v || '', published: true
-    }]);
-    if (error) { alert('Ошибка: ' + error.message); return; }
-    _v=null;window._pi=null;closeM();loadPosts();rProf()
+// --- ПРОСМОТРЫ (БЕЗ НАКРУТКИ) ---
+function addView(id) {
+    var viewed = JSON.parse(sessionStorage.getItem('viewedPosts') || '[]');
+    if(viewed.includes(id)) return;
+    viewed.push(id);
+    sessionStorage.setItem('viewedPosts', JSON.stringify(viewed));
+    if(!views[id]) views[id] = 0;
+    views[id]++;
+    localStorage.setItem('views', JSON.stringify(views));
+    loadPosts();
 }
-function askMedia(type) {
-    _tp = type; _v = null; _covData = null;
-    document.getElementById('mC').innerHTML = `
-    <h2>${type === 'cort' ? '🎬 Корц' : '📹 Видео'}</h2>
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-        <label class="f" style="flex:1;background:#2DC653;color:#fff;text-align:center;padding:12px;border-radius:10px;cursor:pointer;font-weight:700"><input type="file" accept="video/*" capture="environment" style="display:none" onchange="pickVideo(this, 5)">📷 Снять</label>
-        <label class="f" style="flex:1;background:#2196F3;color:#fff;text-align:center;padding:12px;border-radius:10px;cursor:pointer;font-weight:700"><input type="file" accept="video/*" style="display:none" onchange="pickVideo(this, 10)">🖼️ Галерея</label>
-    </div>
-    <div id="pv"></div>
-    <input id="ct" placeholder="Название *">
-    <select id="cat">
-        <option value="">Категория *</option>
-        <option>Ресонс</option><option>Влоги</option><option>Игры</option><option>Музыка</option><option>Юмор</option><option>Спорт</option><option>Обучение</option><option>Животные</option><option>Еда</option><option>Наука</option><option>Технологии</option><option>Путешествия</option><option>Красота</option><option>Мода</option><option>Авто</option><option>Аниме</option><option>Стендап</option><option>Кулинария</option><option>Фитнес</option><option>Искусство</option><option>Танцы</option>
-    </select>
-    <textarea id="cd" rows="2" placeholder="Описание (необязательно)"></textarea>
-    <select id="audience"><option value="all">🌍 Все</option><option value="friends">👥 Подписчики</option><option value="me">🔒 Только я</option></select>
-    <button class="act" onclick="pubV(true)">Опубликовать</button>
-    <button class="bw" onclick="pubV(false)">Сохранить в черновик</button>
-    <button class="bw" onclick="closeM()">Отмена</button>
-    `;
+
+// --- ОТКРЫТИЕ ЧУЖОГО ПРОФИЛЯ ---
+function openUserProfile(username) {
+    if(!me) { alert('Войди'); return; }
+    if(username === me.username) { go('d', document.getElementById('bd')); return; }
+    document.getElementById('mC').innerHTML = '<h2>👤 @' + username + '</h2><div style="text-align:center;padding:20px;"><p>Профиль пользователя @' + username + '</p><button class="act" onclick="closeM()">Написать</button><button class="bw" onclick="closeM()">Закрыть</button></div>';
     document.getElementById('md').classList.add('on');
 }
-function pickVideo(inp, mx) { var f = inp.files[0]; if(!f) return; if(f.size > mx * 1024 * 1024) { alert('Макс ' + mx + ' МБ'); return; } var r = new FileReader(); r.onload = function(e) { _v = e.target.result; document.getElementById('pv').innerHTML = `<video id="pvV" src="${_v}" controls style="width:100%;border-radius:10px" onloadedmetadata="onVM(this)"></video><div id="frmBox"></div>`; }; r.readAsDataURL(f); }
-function onVM(el) { _vidDuration = el.duration; var lim = _tp === 'cort' ? 60 : 600; if(el.duration > lim) { alert('Максимум ' + Math.floor(lim/60) + ' мин!'); document.getElementById('pv').innerHTML = ''; _v = null; return; } var box = document.getElementById('frmBox'); if(!box) return; box.innerHTML = `<p style="font-size:12px;color:#888;text-align:center;margin-top:8px">Выбери кадр для обложки:</p><input type="range" min="0" max="${el.duration-0.1}" step="0.1" value="0" oninput="document.getElementById('pvV').currentTime=this.value" style="width:100%"><button class="bw" onclick="grabFrame()">📸 Сделать обложкой</button>`; }
-function grabFrame() { var v = document.getElementById('pvV'); if(!v) { alert('Нет видео'); return; } var c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); _covData = c.toDataURL('image/jpeg', 0.8); alert('Кадр сохранен как обложка!'); }
-async function pubV(now) {
-    var t = document.getElementById('ct').value.trim(); var cat = document.getElementById('cat').value;
-    if(!t || !cat) { alert('Заполните название и категорию!'); return; } if(!_v) { alert('Выберите видео!'); return; }
-    if(!censorText(t)) { alert('❌ Бот-цензор: Нельзя использовать нецензурную лексику!'); return; }
-    var aud = document.getElementById('audience').value; var pub = now;
-    if (aud === 'me' && now) { alert('Нельзя опубликовать только для себя. Сохранено в черновик.'); pub = false; }
-    const { error } = await supabaseClient.from('posts').insert([{
-        id: Date.now() + '_' + Math.random(), type: _tp, user_name: me.username, text_content: t, description: document.getElementById('cd').value, video: _v, cover: _covData || '', views: 0, published: pub, audience: aud, category: cat, duration: _vidDuration
-    }]);
-    if (error) { alert('Ошибка: ' + error.message); return; }
-    _v = null; _covData = null; closeM(); loadPosts(); rProf();
-    if(pub) alert('Опубликовано!'); else alert('Сохранено в черновик.');
+
+// --- ЧАТЫ (ПУСТЫЕ, НО СИСТЕМА ЕСТЬ) ---
+function rChats() { document.getElementById('chatList').innerHTML = '<p style="color:#888;text-align:center;padding:20px">Нет чатов</p>'; }
+
+// --- ИГРЫ (ЗАГЛУШКИ ДЛЯ ПРИМЕРА) ---
+function rG() {
+    var games = [['dice','🎲 Кости'], ['coin','🪙 Монетка'], ['rps','✊ КНБ'], ['tictactoe','⭕ Крестики'], ['snake','🐍 Змейка']];
+    document.getElementById('gm').innerHTML = games.map(g => '<div onclick="alert(\'Игра ' + g[1] + ' в разработке\')">' + g[1] + '</div>').join('');
 }
-
-function stTab(t){_stTab=t;document.getElementById('stab1').className=t==='video'?'on':'';document.getElementById('stab2').className=t==='cort'?'on':'';stLoad()}
-function stSub(s){_stSub=s;document.getElementById('sst1').className=s==='published'?'on':'';document.getElementById('sst2').className=s==='draft'?'on':'';stLoad()}
-function stLoad(){try{var c=document.getElementById('stC');if(!me){c.innerHTML='<p style="color:#888;text-align:center;padding:20px">Войди</p>';return}var my=posts.filter(function(p){return p.user_name===me.username&&(p.type||'post')===_stTab});var filt=my.filter(function(p){return _stSub==='published'?(p.published!==false):(p.published===false)});if(!filt.length){c.innerHTML='<p style="color:#888;text-align:center;padding:20px">Пусто</p>';return}c.innerHTML=filt.map(function(p){var ls=(likes[p.id]||[]);var cm=(comments[p.id]||[]);var vc=views[p.id]||0;var badge=p.published===false?'<span class="badge">Черновик</span>':'';return '<div class="analytics"><b>'+(p.text_content||'')+'</b>'+badge+'<div class="r2"><span>👁️ Просмотры</span><b>'+vc+'</b></div><div class="r2"><span>❤️ Лайки</span><b>'+ls.length+'</b></div><div class="r2"><span>💬 Комментарии</span><b>'+cm.length+'</b></div><div class="r2"><span>Категория</span><b>'+(p.category||'—')+'</b></div><div class="r2"><span>Аудитория</span><b>'+(p.audience==='all'?'Все':(p.audience==='friends'?'Подписчики':'Только я'))+'</b></div><button class="act" onclick="editItem(\''+p.id+'\')" style="width:100%;margin-top:8px">✏️ Изменить</button><button class="red" onclick="delItem(\''+p.id+'\')" style="width:100%;margin-top:6px">🗑️ Удалить</button></div>'}).join('')}catch(e){}}
-async function editItem(id){var p=posts.find(function(x){return x.id===id});if(!p)return;var ttl=prompt('Название:',p.text_content);if(ttl===null)return;var dsc=prompt('Описание:',p.description||'');p.text_content=ttl;p.description=dsc||'';if(p.published===false&&confirm('Опубликовать сейчас?'))p.published=true;
-    const { error } = await supabaseClient.from('posts').update({ text_content: p.text_content, description: p.description, published: p.published }).eq('id', id);
-    if (error) { alert('Ошибка: ' + error.message); return; }
-    loadPosts(); stLoad(); alert('Сохранено!') }
-async function delItem(id){if(!confirm('Удалить?'))return;
-    const { error } = await supabaseClient.from('posts').delete().eq('id', id);
-    if (error) { alert('Ошибка: ' + error.message); return; }
-    loadPosts(); stLoad() }
-
-// --- АДМИН ---
-function admStats(){try{var u=Object.keys(users).length;document.getElementById('admC').innerHTML='<div class="card">👥 '+u+'</div><div class="card">📝 '+posts.length+'</div><div class="card">⚠️ '+reports.length+' жалоб</div>'}catch(e){}}
-function admUsers(){try{var k=Object.keys(users);document.getElementById('admC').innerHTML=k.length?k.map(function(u){return '<div class="card"><b>@'+u+'</b> <button class="red" style="padding:6px 10px;border:0;border-radius:6px;color:#fff" onclick="delUser(\''+u+'\')">Удалить</button></div>'}).join(''):'<p style="color:#888">Пусто</p>'}catch(e){}}
-function delUser(u){delete users[u];localStorage.setItem('users',JSON.stringify(users));admUsers()}
-function admPosts(){try{var h='<h2>📝 Все посты</h2>';h+=posts.map(function(p){return '<div class="card"><b>@'+p.user_name+'</b><p>'+p.text_content+'</p><div style="font-size:12px;color:#888">❤️ '+(likes[p.id]||[]).length+' | 👁️ '+(views[p.id]||0)+'</div><button class="red" style="padding:6px 10px;border:0;border-radius:6px;color:#fff;margin-top:4px" onclick="delPostAdm(\''+p.id+'\')">Удалить</button></div>'}).join('');document.getElementById('admC').innerHTML=h}catch(e){}}
-async function delPostAdm(id){if(!confirm('Удалить?'))return;
-    const { error } = await supabaseClient.from('posts').delete().eq('id', id);
-    if (error) { alert('Ошибка: ' + error.message); return; }
-    loadPosts(); admPosts() }
-function admReports(){try{var h='<h2>⚠️ Жалобы ('+reports.length+')</h2>';if(!reports.length){h+='<p style="color:#888">Нет жалоб</p>'}else{h+=reports.map(function(r){return '<div class="card"><b>'+r.type+'</b> от @'+r.reporter+'<br>на @'+r.owner+'<br>Причина: '+r.reason+'</div>'}).join('')}h+='<button class="red" style="width:100%;margin-top:8px;padding:10px;border:0;border-radius:8px;color:#fff" onclick="clearReports()">Очистить все</button>';document.getElementById('admC').innerHTML=h}catch(e){}}
-function clearReports(){if(!confirm('Очистить?'))return;reports=[];localStorage.setItem('reports',JSON.stringify(reports));admReports()}
-function admClear(){if(confirm('Очистить ВСЁ?')){localStorage.clear();location.reload()}}
 
 // --- ЗАПУСК ---
 loadPosts();
-rChats(); rG(); rProf(); checkAdmin();
-setTimeout(checkBirthday, 2000);
+subscribeToPosts();
+rChats(); rG(); rProf();
 </script></body></html>
