@@ -8,12 +8,9 @@
 <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     body { background: #f6fbe9; margin: 0; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 100vh; color: #22301a; }
-    
     .card { background: #fff; padding: 40px 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; width: 100%; max-width: 350px; }
-    
-    .status-box { margin-bottom: 20px; padding: 15px; border-radius: 12px; background: #f0faf1; color: #2DC653; font-weight: 800; font-size: 18px; }
+    .status-box { margin-bottom: 20px; padding: 15px; border-radius: 12px; background: #f0faf1; color: #2DC653; font-weight: 800; font-size: 18px; word-break: break-all; }
     .status-box.guest { background: #f5f5f5; color: #888; }
-
     .btn { border: none; padding: 15px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%; transition: 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 10px; }
     .btn:active { transform: scale(0.97); }
     .btn-yandex { background: #FC3F1D; color: #fff; box-shadow: 0 4px 15px rgba(252, 63, 29, 0.2); }
@@ -34,58 +31,55 @@
     </div>
 
 <script>
-    // НАСТРОЙКИ SUPABASE
     const SB = 'https://owfnqdqpzcmkblgdrafk.supabase.co';
     const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93Zm5xZHFwemNta2JsZ2RyYWZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2ODc2NDEsImV4cCI6MjEwNzI2MzY0MX0.LloyseM1xpp-APLp5uvYeUbFkqW-Psm0R9LLuRPgX00';
     
-    // ТВОЙ АДРЕС НА GITHUB
     const MY_URL = 'https://gordeybubenchikov.github.io/Resons/TestYandex.html';
 
-    // Инициализация с включенным PKCE (защита от потери сессии)
+    // ГЛАВНОЕ ИЗМЕНЕНИЕ: Используем 'implicit' вместо 'pkce'
     const sb = supabase.createClient(SB, SK, {
         auth: {
-            flowType: 'pkce',
-            detectSessionInUrl: true
+            flowType: 'implicit',
+            detectSessionInUrl: true,
+            persistSession: true
         }
     });
 
-    // Очистка адресной строки от токенов после возврата
-    if (window.location.hash.includes('access_token') || window.location.hash.includes('error')) {
+    // Если в адресе есть токены (после возврата с Яндекса), очищаем его
+    if (window.location.hash.includes('access_token')) {
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    // Проверяем, вошел ли пользователь
-    sb.auth.getSession().then(({data: {session}}) => {
-        updateUI(session);
-    });
-
-    sb.auth.onAuthStateChange((_event, session) => {
-        updateUI(session);
-    });
-
-    function updateUI(session) {
-        const status = document.getElementById('status');
-        const loginBtn = document.getElementById('login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-
+    // Слушаем изменения состояния входа
+    sb.auth.onAuthStateChange((event, session) => {
+        console.log('Событие входа:', event); // Полезно для проверки в консоли
+        
         if (session) {
             const user = session.user;
-            const email = user.email || 'Без почты';
-            const name = user.user_metadata?.full_name || user.user_metadata?.name || email.split('@')[0];
+            // Яндекс передает имя в разных полях, поэтому проверяем несколько
+            const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Пользователь';
             
-            status.textContent = 'Вы вошли как: ' + name;
-            status.classList.remove('guest');
-            
-            loginBtn.style.display = 'none';
-            logoutBtn.style.display = 'flex';
+            document.getElementById('status').textContent = 'Вы вошли: ' + name;
+            document.getElementById('status').classList.remove('guest');
+            document.getElementById('login-btn').style.display = 'none';
+            document.getElementById('logout-btn').style.display = 'flex';
         } else {
-            status.textContent = 'Вы не вошли';
-            status.classList.add('guest');
-            
-            loginBtn.style.display = 'flex';
-            logoutBtn.style.display = 'none';
+            document.getElementById('status').textContent = 'Вы не вошли';
+            document.getElementById('status').classList.add('guest');
+            document.getElementById('login-btn').style.display = 'flex';
+            document.getElementById('logout-btn').style.display = 'none';
         }
-    }
+    });
+
+    // Принудительно проверяем сессию при загрузке страницы
+    sb.auth.getSession().then(({data}) => {
+        if(data.session) {
+            document.getElementById('status').textContent = 'Вы вошли: ' + (data.session.user.user_metadata?.full_name || 'Пользователь');
+            document.getElementById('status').classList.remove('guest');
+            document.getElementById('login-btn').style.display = 'none';
+            document.getElementById('logout-btn').style.display = 'flex';
+        }
+    });
 
     async function loginYandex() {
         const { error } = await sb.auth.signInWithOAuth({
@@ -97,6 +91,7 @@
 
     async function doLogout() {
         await sb.auth.signOut();
+        window.location.reload();
     }
 </script>
 </body>
