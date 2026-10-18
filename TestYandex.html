@@ -3,35 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Тест входа и регистрации</title>
+<title>Тест входа Ресонс</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-    body { background: #f6fbe9; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: #22301a; }
+    body { background: #f6fbe9; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; color: #22301a; }
     
-    /* Стили профиля */
     .profile-card { background: #fff; padding: 30px 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; width: 100%; max-width: 350px; }
     .avatar { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg,#FFC300,#2DC653); display: flex; align-items: center; justify-content: center; font-size: 40px; color: #fff; margin: 0 auto 15px; border: 4px solid #fff; box-shadow: 0 4px 15px rgba(45,198,83,0.3); }
+    .avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
     .username { font-size: 20px; font-weight: 800; margin-bottom: 20px; }
     
-    /* Кнопки */
     .btn { border: none; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; width: 100%; transition: 0.2s; font-family: inherit; }
     .btn:active { transform: scale(0.97); }
     .btn-main { background: #2DC653; color: #fff; box-shadow: 0 4px 15px rgba(45,198,83,0.2); }
     .btn-yandex { background: #FC3F1D; color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; }
+    .btn-logout { background: #f0f0f0; color: #e05555; margin-top: 15px; }
     
-    /* Модальное окно */
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; padding: 15px; z-index: 100; backdrop-filter: blur(3px); }
     .modal.on { display: flex; }
     .modal-box { background: #fff; width: 100%; max-width: 400px; border-radius: 20px; padding: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
     .close-btn { position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 16px; cursor: pointer; color: #666; font-weight: bold; }
     
-    /* Вкладки */
     .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #eee; margin-top: 10px; }
     .tab { flex: 1; text-align: center; padding: 12px; font-weight: 800; color: #888; cursor: pointer; transition: 0.2s; font-size: 15px; }
     .tab.active { color: #2DC653; border-bottom: 3px solid #2DC653; margin-bottom: -2px; }
     
-    /* Инпуты */
     input { width: 100%; padding: 12px 15px; border: 1.5px solid #eaeaea; border-radius: 10px; margin-bottom: 10px; font-size: 14px; outline: none; transition: 0.2s; font-family: inherit; background: #fafafa; }
     input:focus { border-color: #2DC653; background: #fff; }
     
@@ -43,31 +40,27 @@
 </head>
 <body>
 
-    <!-- Экран профиля (как будто мы не вошли) -->
-    <div class="profile-card">
-        <div class="avatar">?</div>
-        <div class="username">@гость</div>
-        <!-- Та самая кнопка, которую ты просила -->
-        <button class="btn btn-main" onclick="openAuth('login')">Вход | Регистрация</button>
+    <div class="profile-card" id="main-profile">
+        <div class="avatar" id="user-avatar">?</div>
+        <div class="username" id="user-name">@гость</div>
+        <button class="btn btn-main" id="auth-btn" onclick="openAuth('login')">Вход | Регистрация</button>
+        <button class="btn btn-logout" id="logout-btn" style="display:none" onclick="doLogout()">Выйти</button>
     </div>
 
-    <!-- Всплывающее окно -->
+    <!-- Модальное окно -->
     <div class="modal" id="authModal">
         <div class="modal-box">
             <button class="close-btn" onclick="closeModal()">✕</button>
             
-            <!-- Вкладки -->
             <div class="tabs">
                 <div id="tab-login" class="tab" onclick="switchTab('login')">Вход</div>
                 <div id="tab-reg" class="tab" onclick="switchTab('reg')">Регистрация</div>
             </div>
 
-            <!-- Форма -->
             <div id="auth-form"></div>
             
             <div class="divider">или</div>
             
-            <!-- Кнопка Яндекса -->
             <button class="btn btn-yandex" onclick="loginYandex()">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12.16 1.19c-4.87 0-7.63 2.88-7.63 6.51 0 2.68 1.42 4.41 3.65 5.31l-3.65 7.32h3.08l3.2-6.64h2.35v6.64h2.8V1.69c-.53-.19-1.42-.5-3.8-.5zm-1.02 10.19c-1.57-.27-2.58-1.31-2.58-3.41 0-2.47 1.42-3.65 3.41-3.65.38 0 .73.04 1.03.12v7.03h-1.86z"/></svg>
                 Войти через Яндекс
@@ -76,13 +69,52 @@
     </div>
 
 <script>
-    // Ключи из твоего проекта Supabase
+    // ТВОИ ДАННЫЕ SUPABASE
     const SB = 'https://owfnqdqpzcmkblgdrafk.supabase.co';
     const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93Zm5xZHFwemNta2JsZ2RyYWZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2ODc2NDEsImV4cCI6MjEwNzI2MzY0MX0.LloyseM1xpp-APLp5uvYeUbFkqW-Psm0R9LLuRPgX00';
-    const sb = supabase.createClient(SB, SK);
+    
+    // НАЗВАНИЕ ПРОВАЙДЕРА ЯНДЕКСА (ЕСЛИ ОШИБКА, ПОМЕНЯЙ НА 'yandex')
+    const YA_PROVIDER = 'custom:yandex'; 
+    
+    // ТВОЙ АДРЕС НА GITHUB
+    const MY_URL = 'https://gordeybubenchikov.github.io/Resons/TestYandex.html';
 
+    const sb = supabase.createClient(SB, SK);
     const modal = document.getElementById('authModal');
     const formContainer = document.getElementById('auth-form');
+
+    // Проверка входа при загрузке страницы
+    sb.auth.getSession().then(({data: {session}}) => {
+        updateProfileUI(session);
+    });
+
+    sb.auth.onAuthStateChange((_event, session) => {
+        updateProfileUI(session);
+    });
+
+    function updateProfileUI(session) {
+        if (session) {
+            const user = session.user;
+            const meta = user.user_metadata || {};
+            const name = meta.username || user.email.split('@')[0];
+            document.getElementById('user-name').textContent = '@' + name;
+            document.getElementById('user-avatar').textContent = name[0].toUpperCase();
+            document.getElementById('auth-btn').style.display = 'none';
+            document.getElementById('logout-btn').style.display = 'block';
+            
+            // Пытаемся загрузить аватарку из профиля
+            sb.from('profiles').select('avatar_url').eq('id', user.id).single().then(({data}) => {
+                if (data && data.avatar_url) {
+                    document.getElementById('user-avatar').innerHTML = `<img src="${data.avatar_url}">`;
+                }
+            });
+        } else {
+            document.getElementById('user-name').textContent = '@гость';
+            document.getElementById('user-avatar').textContent = '?';
+            document.getElementById('auth-btn').style.display = 'block';
+            document.getElementById('logout-btn').style.display = 'none';
+        }
+    }
 
     function openAuth(tab) {
         modal.classList.add('on');
@@ -94,7 +126,6 @@
     }
 
     function switchTab(tab) {
-        // Меняем стили вкладок
         document.getElementById('tab-login').classList.remove('active');
         document.getElementById('tab-reg').classList.remove('active');
         
@@ -110,7 +141,6 @@
             formContainer.innerHTML = `
                 <input id="reg_first" placeholder="Имя" autocomplete="off">
                 <input id="reg_last" placeholder="Фамилия" autocomplete="off">
-                <input id="reg_phone" type="tel" placeholder="Телефон (не обязательно)" autocomplete="off">
                 <input id="reg_user" placeholder="Никнейм (латиницей)" autocomplete="off">
                 <input id="reg_email" type="email" placeholder="Email" autocomplete="off">
                 <input id="reg_pass" type="password" placeholder="Пароль (от 6 символов)" autocomplete="new-password">
@@ -119,7 +149,6 @@
         }
     }
 
-    // ЛОГИКА ВХОДА
     async function doLogin() {
         const e = document.getElementById('log_email').value.trim();
         const p = document.getElementById('log_pass').value;
@@ -129,22 +158,17 @@
         btn.textContent = 'Загрузка...'; btn.disabled = true;
 
         const { error } = await sb.auth.signInWithPassword({ email: e, password: p });
-        
         if (error) {
-            alert('Ошибка: ' + error.message);
+            alert('Ошибка входа: ' + error.message);
             btn.textContent = 'Войти в аккаунт'; btn.disabled = false;
         } else {
-            alert('Успешный вход! (Проверь консоль)');
-            console.log('Вы вошли!');
             closeModal();
         }
     }
 
-    // ЛОГИКА РЕГИСТРАЦИИ
     async function doRegister() {
         const f = document.getElementById('reg_first').value.trim();
         const l = document.getElementById('reg_last').value.trim();
-        const ph = document.getElementById('reg_phone').value.trim();
         const u = document.getElementById('reg_user').value.trim();
         const e = document.getElementById('reg_email').value.trim();
         const p = document.getElementById('reg_pass').value;
@@ -157,11 +181,7 @@
         const btn = event.target;
         btn.textContent = 'Создаем...'; btn.disabled = true;
 
-        const { data, error } = await sb.auth.signUp({
-            email: e, password: p,
-            options: { data: { username: u } }
-        });
-
+        const { data, error } = await sb.auth.signUp({ email: e, password: p, options: { data: { username: u } } });
         if (error) {
             alert('Ошибка: ' + error.message);
             btn.textContent = 'Создать аккаунт'; btn.disabled = false;
@@ -169,34 +189,25 @@
         }
 
         if(data.user) {
-            // Сохраняем в профиль
-            const { error: pErr } = await sb.from('profiles').insert({
-                id: data.user.id, username: u, first_name: f, last_name: l, phone: ph
-            });
-
-            if(pErr) {
-                alert('Аккаунт создан, но профиль не сохранился: ' + pErr.message);
-            } else {
-                alert('Успешная регистрация!');
-                closeModal();
-            }
+            await sb.from('profiles').insert({ id: data.user.id, username: u, first_name: f, last_name: l });
+            alert('Успешная регистрация!');
+            closeModal();
         }
     }
 
-    // ЯНДЕКС
     async function loginYandex() {
-        // ВАЖНО: Если в Supabase Identifier сохранен как 'custom:yandex', 
-        // то тут нужно написать 'custom:yandex'. Если просто 'yandex', то 'yandex'.
-        const providerName = 'custom:yandex'; 
-
         const { error } = await sb.auth.signInWithOAuth({
-            provider: providerName,
-            options: { redirectTo: window.location.href } // Вернет на эту же тестовую страницу
+            provider: YA_PROVIDER,
+            options: { 
+                redirectTo: MY_URL  // <-- ВОТ СЮДА ВШИТ ТВОЙ АДРЕС
+            }
         });
+        if(error) alert('Ошибка Яндекса: ' + error.message);
+    }
 
-        if(error) {
-            alert('Ошибка Яндекса: ' + error.message);
-        }
+    async function doLogout() {
+        await sb.auth.signOut();
+        alert('Вы вышли из аккаунта');
     }
 </script>
 </body>
