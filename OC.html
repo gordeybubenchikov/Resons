@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>okuhleOS</title>
+<style>
+  :root{
+    --bg:#0b0e14; --bg2:#121826; --card:rgba(21, 28, 44, 0.9);
+    --text:#e6e9f0; --muted:#8b93a7; --accent:#7C5CFF; --accent2:#22D3EE; --line:#232c40;
+    --wall-bg: radial-gradient(circle at 50% 30%, #1b2340 0%, #0b0e14 70%);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0b0e14;color:#e6e9f0;}
+  
+  /* Экраны */
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .4s, transform .4s;transform:translateY(10px);z-index:10;}
+  .screen.active{opacity:1;pointer-events:auto;transform:translateY(0)}
+  
+  /* Обои */
+  .wallpaper{position:absolute;inset:0;z-index:-1;background:var(--wall-bg);display:flex;align-items:center;justify-content:center;transition:background 0.3s;}
+  .wallpaper svg{width:60vw;height:60vw;max-width:400px;opacity:0.15;animation:float 6s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+  /* Статус-бар */
+  .status-bar{position:absolute;top:0;left:0;right:0;height:36px;display:flex;justify-content:space-between;align-items:center;padding:0 16px;font-size:13px;font-weight:500;z-index:50;background:transparent;}
+  .status-right{display:flex;gap:8px;align-items:center;}
+  
+  /* Установка */
+  .install-screen{align-items:center;justify-content:center;padding:24px;text-align:center}
+  h1{font-size:26px;font-weight:700;margin-bottom:8px;}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:30px}
+  .btn{border:none;cursor:pointer;font-size:16px;font-weight:600;padding:16px 40px;border-radius:16px;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 8px 24px rgba(124,92,255,.35);transition:transform .15s;}
+  .btn:active{transform:scale(0.95)}
+  .btn.secondary{background:var(--bg2);border:1px solid var(--line);box-shadow:none;}
+
+  /* Логотип */
+  .logo-wrap{width:100px;height:100px;margin-bottom:20px;display:flex;justify-content:center;}
+  .logo-svg{width:100%;height:100%;}
+
+  /* Экран блокировки */
+  #lock-screen{justify-content:center;align-items:center;text-align:center;cursor:pointer;}
+  .lock-time{font-size:72px;font-weight:300;letter-spacing:2px;}
+  .lock-date{font-size:16px;color:var(--muted);margin-top:8px;}
+
+  /* Рабочий стол */
+  #desktop{justify-content:flex-start;padding:60px 20px 20px;}
+  .desk-time{font-size:48px;font-weight:300;text-align:center;margin-bottom:20px;}
+  .search-bar{width:100%;max-width:400px;margin:0 auto 30px auto;background:var(--card);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:10px;color:var(--muted);font-size:15px;cursor:pointer;}
+  .apps-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:20px;width:100%;max-width:400px;margin:0 auto;}
+  .app-icon{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .15s;}
+  .app-icon:active{transform:scale(0.9)}
+  .app-img{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 8px 20px rgba(0,0,0,0.4);}
+  .app-name{font-size:12px;color:var(--text)}
+
+  /* Окна приложений */
+  .app-window{position:absolute;inset:0;background:var(--bg);z-index:100;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s cubic-bezier(0.1, 0.9, 0.2, 1);}
+  .app-window.open{transform:translateY(0)}
+  .app-header{height:60px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--line);font-weight:600;font-size:16px;padding-top:10px;}
+  .back-btn{background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;margin-right:16px;}
+  .app-content{flex:1;overflow-y:auto;padding:20px;}
+
+  /* Настройки */
+  .settings-tabs{display:flex;gap:10px;margin-bottom:20px;overflow-x:auto;padding-bottom:5px;}
+  .settings-tab{padding:8px 16px;border-radius:12px;background:var(--bg2);border:1px solid var(--line);font-size:13px;cursor:pointer;white-space:nowrap;}
+  .settings-tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .settings-group{background:var(--card);border-radius:16px;border:1px solid var(--line);margin-bottom:20px;overflow:hidden;}
+  .settings-item{padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);font-size:14px;}
+  .settings-item:last-child{border-bottom:none;}
+  .settings-item .val{color:var(--muted);}
+
+  /* Переключатель */
+  .switch{position:relative;display:inline-block;width:44px;height:24px;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:var(--bg2);border:1px solid var(--line);transition:.4s;border-radius:24px;}
+  .slider:before{position:absolute;content:"";height:18px;width:18px;left:2px;bottom:2px;background-color:var(--muted);transition:.4s;border-radius:50%;}
+  input:checked + .slider{background-color:var(--accent);border-color:var(--accent);}
+  input:checked + .slider:before{transform:translateX(20px);background-color:#fff;}
+
+  /* Вкладка "Цвета" */
+  .color-grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;margin-top:15px;}
+  .color-swatch{width:100%;aspect-ratio:1;border-radius:12px;border:2px solid transparent;cursor:pointer;transition:transform .1s;}
+  .color-swatch:active{transform:scale(0.9);}
+  .color-swatch.selected{border-color:#fff;box-shadow:0 0 10px var(--accent);}
+  .preview-card{background:var(--bg2);border-radius:20px;padding:20px;text-align:center;margin-bottom:20px;border:1px solid var(--line);}
+  .preview-box{width:120px;height:240px;margin:0 auto 15px;border-radius:20px;background:var(--wall-bg);position:relative;overflow:hidden;border:4px solid #333;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+
+  /* Шторка и Пульт */
+  .overlay-panel{position:absolute;top:-100%;left:0;right:0;bottom:0;background:rgba(11,14,20,0.95);backdrop-filter:blur(15px);z-index:90;transition:top .4s cubic-bezier(0.1, 0.9, 0.2, 1);display:flex;flex-direction:column;padding:40px 20px;}
+  .overlay-panel.open{top:0;}
+  .panel-title{font-size:20px;font-weight:600;margin-bottom:20px;text-align:center;}
+  
+  /* Пульт управления (свайп вбок) */
+  .panel-content{display:flex;flex-direction:column;gap:20px;}
+  .quick-toggles{display:flex;justify-content:space-around;margin-bottom:20px;}
+  .toggle-btn{width:60px;height:60px;border-radius:50%;background:var(--bg2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--muted);cursor:pointer;transition:all .2s;}
+  .toggle-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .slider-container{display:flex;align-items:center;gap:15px;}
+  .slider-container input[type=range]{flex:1;accent-color:var(--accent);}
+
+  /* Клавиатура */
+  #keyboard{position:absolute;bottom:0;left:0;right:0;z-index:200;background:#121826;border-top:1px solid var(--line);padding:10px;transform:translateY(100%);transition:transform .3s ease;display:flex;flex-direction:column;gap:8px;}
+  #keyboard.open{transform:translateY(0);}
+  .kb-row{display:flex;justify-content:center;gap:6px;}
+  .kb-key{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 0;flex:1;text-align:center;font-size:16px;color:var(--text);cursor:pointer;}
+  .kb-key:active{background:var(--accent);color:#fff;}
+  .kb-key.special{flex:2;font-size:12px;}
+  .kb-key.space{flex:5;}
+
+  /* Заметки */
+  .note-input{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;color:var(--text);font-size:15px;font-family:inherit;resize:none;margin-bottom:10px;}
+  .note-input:focus{outline:none;border-color:var(--accent);}
+  .note-list{display:flex;flex-direction:column;gap:10px;margin-top:20px;}
+  .note-item{background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--line);font-size:14px;display:flex;justify-content:space-between;}
+
+  /* Калькулятор */
+  .calc-display{background:var(--bg2);border-radius:16px;padding:20px;text-align:right;font-size:36px;font-weight:300;margin-bottom:20px;min-height:80px;display:flex;align-items:center;justify-content:flex-end;overflow:hidden;}
+  .calc-grid{display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;}
+  .calc-btn{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 0;font-size:20px;color:var(--text);cursor:pointer;}
+  .calc-btn:active{background:var(--bg2)}
+  .calc-btn.op{color:var(--accent2);}
+  .calc-btn.eq{background:var(--accent);color:#fff;border:none;}
+
+  /* Браузер */
+  .browser-content{padding:20px;text-align:center;color:var(--muted);margin-top:50px;}
+</style>
+</head>
+<body>
+
+<!-- СТАТУС-БАР -->
+<div class="status-bar" id="global-status-bar" style="display:none;">
+  <div id="status-time">00:00</div>
+  <div class="status-right">
+    <span id="status-battery">🔋 25%</span>
+    <span>📶</span>
+    <span>🛜</span>
+  </div>
+</div>
+
+<!-- ================= УСТАНОВКА ================= -->
+<section class="screen active install-screen" id="install-screen">
+  <div class="logo-wrap">
+    <svg class="logo-svg" viewBox="0 0 120 120">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C5CFF"/><stop offset="100%" stop-color="#22D3EE"/></linearGradient></defs>
+      <circle cx="60" cy="60" r="38" fill="none" stroke="url(#g)" stroke-width="7" stroke-linecap="round" stroke-dasharray="200 40" transform="rotate(-45 60 60)"/>
+      <circle cx="60" cy="60" r="13" fill="url(#g)"/><circle cx="92" cy="28" r="5" fill="#22D3EE"/>
+    </svg>
+  </div>
+  <h1>Ваша okuhleOS установлена!</h1>
+  <p class="sub">Система готова к работе.</p>
+  <button class="btn" onclick="goTo('lock-screen')">Продолжить</button>
+</section>
+
+<!-- ================= ЭКРАН БЛОКИРОВКИ ================= -->
+<section class="screen" id="lock-screen">
+  <div class="wallpaper" id="lock-wall">
+    <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="38" fill="none" stroke="#7C5CFF" stroke-width="7" stroke-linecap="round" stroke-dasharray="200 40" transform="rotate(-45 60 60)"/><circle cx="60" cy="60" r="13" fill="#22D3EE"/></svg>
+  </div>
+  <div class="lock-time" id="lock-time">00:00</div>
+  <div class="lock-date" id="lock-date">Загрузка...</div>
+  <div style="position:absolute;bottom:30px;width:100%;text-align:center;color:var(--muted);font-size:13px;animation:pulse 2s infinite;cursor:pointer;" onclick="unlock()">Свайп вверх для входа ⬆️</div>
+</section>
+
+<!-- ================= РАБОЧИЙ СТОЛ ================= -->
+<section class="screen" id="desktop">
+  <div class="wallpaper" id="desk-wall">
+    <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="38" fill="none" stroke="#7C5CFF" stroke-width="7" stroke-linecap="round" stroke-dasharray="200 40" transform="rotate(-45 60 60)"/><circle cx="60" cy="60" r="13" fill="#22D3EE"/></svg>
+  </div>
+  
+  <div class="desk-time" id="desk-time">00:00</div>
+  <div class="search-bar" onclick="openSearch()"><span>🔍 Поиск в okuhle...</span></div>
+
+  <div class="apps-grid">
+    <div class="app-icon" onclick="openApp('calc-app')"><div class="app-img">🧮</div><div class="app-name">Калькулятор</div></div>
+    <div class="app-icon" onclick="openApp('notes-app')"><div class="app-img">📝</div><div class="app-name">Заметки</div></div>
+    <div class="app-icon" onclick="openApp('settings-app')"><div class="app-img">⚙️</div><div class="app-name">Настройки</div></div>
+  </div>
+  
+  <div style="position:absolute; top:0; left:0; right:0; height:20px; z-index:40;" onclick="togglePanel('notification-panel', true)"></div>
+  <div style="position:absolute; top:0; left:0; bottom:0; width:20px; z-index:40;" onclick="togglePanel('control-panel', true)"></div>
+</section>
+
+<!-- ================= ШТОРКА УВЕДОМЛЕНИЙ ================= -->
+<div class="overlay-panel" id="notification-panel">
+  <div class="panel-title">Уведомления</div>
+  <div style="text-align:center; color:var(--muted); margin-top:50px;">Нет новых уведомлений</div>
+  <button class="btn secondary" style="margin-top:auto;" onclick="togglePanel('notification-panel', false)">Закрыть</button>
+</div>
+
+<!-- ================= ПУЛЬТ УПРАВЛЕНИЯ ================= -->
+<div class="overlay-panel" id="control-panel" style="padding-top:60px;">
+  <div class="panel-title">Пульт управления</div>
+  <div class="panel-content">
+    <div class="quick-toggles">
+      <div class="toggle-btn active" onclick="this.classList.toggle('active')">🛜</div>
+      <div class="toggle-btn" onclick="this.classList.toggle('active')">📶</div>
+      <div class="toggle-btn" onclick="this.classList.toggle('active')">🦷</div>
+      <div class="toggle-btn" onclick="this.classList.toggle('active')">✈️</div>
+    </div>
+    <div class="slider-container"><span>🔅</span><input type="range" min="0" max="100" value="80"></div>
+    <div class="slider-container"><span>🔊</span><input type="range" min="0" max="100" value="50"></div>
+    <button class="btn secondary" style="margin-top:20px;" onclick="togglePanel('control-panel', false)">Закрыть</button>
+  </div>
+</div>
+
+<!-- ================= НАСТРОЙКИ ================= -->
+<div id="settings-app" class="app-window">
+  <div class="app-header"><button class="back-btn" onclick="closeApp('settings-app')">←</button> Настройки</div>
+  <div class="app-content">
+    <div class="settings-tabs">
+      <div class="settings-tab active" onclick="switchTab('tab-colors', this)">Обои</div>
+      <div class="settings-tab" onclick="switchTab('tab-system', this)">Система</div>
+      <div class="settings-tab" onclick="switchTab('tab-about', this)">О системе</div>
+    </div>
+
+    <div id="tab-colors" class="tab-content">
+      <div class="preview-card">
+        <div class="preview-box" id="phone-preview"></div>
+        <h3 style="margin-bottom:10px;">Предпросмотр</h3>
+        <button class="btn" onclick="applyWallpaper()">Установить</button>
+      </div>
+      <div class="color-grid" id="color-grid"></div>
+    </div>
+
+    <div id="tab-system" class="tab-content" style="display:none;">
+      <div class="settings-group">
+        <div class="settings-item"><span>Энергосбережение</span><label class="switch"><input type="checkbox"><span class="slider"></span></label></div>
+        <div class="settings-item"><span>Язык</span><span class="val">Русский</span></div>
+        <div class="settings-item"><span>Клавиатура</span><span class="val">okuhle KB</span></div>
+      </div>
+    </div>
+
+    <div id="tab-about" class="tab-content" style="display:none;">
+      <div style="background:var(--card); padding:20px; border-radius:16px; border:1px solid var(--line);">
+        <h2>okuhleOS</h2>
+        <p style="color:var(--muted); margin-top:10px; font-size:14px; line-height:1.5;">Веб-операционная система нового поколения. Версия 1.0.<br><br>Проект находится в активной разработке.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= БРАУЗЕР ================= -->
+<div id="search-modal" class="app-window">
+  <div class="app-header"><button class="back-btn" onclick="closeApp('search-modal')">←</button> Браузер okuhle</div>
+  <div class="app-content">
+    <input type="text" id="browser-input" class="note-input" readonly placeholder="Введите запрос..." onclick="showKeyboard(this)">
+    <button class="btn" style="width:100%; margin-top:10px; padding:12px;" onclick="searchBrowser()">🔍 Найти</button>
+    <div id="browser-result" class="browser-content" style="display:none;">
+      <h2 style="color:var(--text);">Бета-версия</h2>
+      <p style="margin-top:10px;">По вашему запросу ничего не найдено.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= КАЛЬКУЛЯТОР ================= -->
+<div id="calc-app" class="app-window">
+  <div class="app-header"><button class="back-btn" onclick="closeApp('calc-app')">←</button> Калькулятор</div>
+  <div class="app-content">
+    <div class="calc-display" id="calc-display">0</div>
+    <div class="calc-grid">
+      <button class="calc-btn op" onclick="calcInput('C')">C</button>
+      <button class="calc-btn op" onclick="calcInput('/')">÷</button>
+      <button class="calc-btn op" onclick="calcInput('*')">×</button>
+      <button class="calc-btn op" onclick="calcInput('-')">-</button>
+      <button class="calc-btn" onclick="calcInput('7')">7</button>
+      <button class="calc-btn" onclick="calcInput('8')">8</button>
+      <button class="calc-btn" onclick="calcInput('9')">9</button>
+      <button class="calc-btn op" onclick="calcInput('+')">+</button>
+      <button class="calc-btn" onclick="calcInput('4')">4</button>
+      <button class="calc-btn" onclick="calcInput('5')">5</button>
+      <button class="calc-btn" onclick="calcInput('6')">6</button>
+      <button class="calc-btn eq" onclick="calcInput('=')" style="grid-row: span 2;">=</button>
+      <button class="calc-btn" onclick="calcInput('1')">1</button>
+      <button class="calc-btn" onclick="calcInput('2')">2</button>
+      <button class="calc-btn" onclick="calcInput('3')">3</button>
+      <button class="calc-btn" onclick="calcInput('0')" style="grid-column: span 2;">0</button>
+      <button class="calc-btn" onclick="calcInput('.')">.</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ЗАМЕТКИ ================= -->
+<div id="notes-app" class="app-window">
+  <div class="app-header"><button class="back-btn" onclick="closeApp('notes-app')">←</button> Заметки</div>
+  <div class="app-content">
+    <textarea id="note-input" class="note-input" rows="3" placeholder="Напишите заметку..." readonly onclick="showKeyboard(this)"></textarea>
+    <button class="btn" style="width:100%; padding:12px;" onclick="saveNote()">Добавить</button>
+    <div class="note-list" id="note-list"></div>
+  </div>
+</div>
+
+<!-- ================= КЛАВИАТУРА ================= -->
+<div id="keyboard">
+  <div class="kb-row">
+    <div class="kb-key" onclick="kbPress('й')">й</div><div class="kb-key" onclick="kbPress('ц')">ц</div><div class="kb-key" onclick="kbPress('у')">у</div><div class="kb-key" onclick="kbPress('к')">к</div><div class="kb-key" onclick="kbPress('е')">е</div><div class="kb-key" onclick="kbPress('н')">н</div><div class="kb-key" onclick="kbPress('г')">г</div><div class="kb-key" onclick="kbPress('ш')">ш</div><div class="kb-key" onclick="kbPress('щ')">щ</div><div class="kb-key" onclick="kbPress('з')">з</div>
+  </div>
+  <div class="kb-row">
+    <div class="kb-key" onclick="kbPress('ф')">ф</div><div class="kb-key" onclick="kbPress('ы')">ы</div><div class="kb-key" onclick="kbPress('в')">в</div><div class="kb-key" onclick="kbPress('а')">а</div><div class="kb-key" onclick="kbPress('п')">п</div><div class="kb-key" onclick="kbPress('р')">р</div><div class="kb-key" onclick="kbPress('о')">о</div><div class="kb-key" onclick="kbPress('л')">л</div><div class="kb-key" onclick="kbPress('д')">д</div><div class="kb-key" onclick="kbPress('ж')">ж</div>
+  </div>
+  <div class="kb-row">
+    <div class="kb-key special" onclick="kbPress('Backspace')">⌫</div><div class="kb-key" onclick="kbPress('я')">я</div><div class="kb-key" onclick="kbPress('ч')">ч</div><div class="kb-key" onclick="kbPress('с')">с</div><div class="kb-key" onclick="kbPress('м')">м</div><div class="kb-key" onclick="kbPress('и')">и</div><div class="kb-key" onclick="kbPress('т')">т</div><div class="kb-key" onclick="kbPress('ь')">ь</div><div class="kb-key" onclick="kbPress('б')">б</div><div class="kb-key" onclick="kbPress('ю')">ю</div>
+  </div>
+  <div class="kb-row">
+    <div class="kb-key special" onclick="kbPress(' ')" style="flex:1;">Пробел</div>
+    <div class="kb-key special" onclick="hideKeyboard()" style="flex:1;">Готово</div>
+  </div>
+</div>
+
+<script>
+  // Безопасный запуск
+  document.addEventListener('DOMContentLoaded', () => {
+    
+    window.goTo = function(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      if(id === 'lock-screen' || id === 'desktop') {
+        document.getElementById('global-status-bar').style.display = 'flex';
+      }
+    };
+
+    window.unlock = function() {
+      const lock = document.getElementById('lock-screen');
+      lock.style.transform = 'translateY(-100%)';
+      lock.style.opacity = '0';
+      setTimeout(() => {
+        goTo('desktop');
+        lock.style.transform = 'none';
+        lock.style.opacity = '1';
+      }, 400);
+    };
+
+    function updateTime() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute: '2-digit'});
+      const dateStr = now.toLocaleDateString('ru-RU', {weekday: 'long', day: 'numeric', month: 'long'});
+      
+      if(document.getElementById('lock-time')) document.getElementById('lock-time').innerText = timeStr;
+      if(document.getElementById('desk-time')) document.getElementById('desk-time').innerText = timeStr;
+      if(document.getElementById('status-time')) document.getElementById('status-time').innerText = timeStr;
+      
+      if(document.getElementById('lock-date')) {
+        document.getElementById('lock-date').innerText = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+      }
+    }
+
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    window.openApp = function(id) {
+      document.getElementById(id).classList.add('open');
+    }
+    window.closeApp = function(id) {
+      document.getElementById(id).classList.remove('open');
+      hideKeyboard();
+    }
+
+    window.switchTab = function(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+      document.getElementById(tabId).style.display = 'block';
+      document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    const colors = [
+      '#0b0e14', '#1e3a8a', '#4c1d95', '#831843', '#064e3b', '#0f766e', 
+      '#78350f', '#3f3f46', '#1e1b4b', '#4c0519', '#022c22', '#27272a'
+    ];
+    let selectedColor = '#0b0e14';
+
+    function initColors() {
+      const grid = document.getElementById('color-grid');
+      if(!grid) return;
+      grid.innerHTML = '';
+      colors.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'color-swatch' + (c === selectedColor ? ' selected' : '');
+        div.style.background = c;
+        div.onclick = () => {
+          document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+          div.classList.add('selected');
+          selectedColor = c;
+          document.getElementById('phone-preview').style.background = c;
+        };
+        grid.appendChild(div);
+      });
+      document.getElementById('phone-preview').style.background = selectedColor;
+    }
+    initColors();
+
+    window.applyWallpaper = function() {
+      const btn = document.querySelector('#tab-colors .btn');
+      btn.innerText = 'Загрузка...';
+      setTimeout(() => {
+        document.documentElement.style.setProperty('--wall-bg', selectedColor);
+        btn.innerText = 'Установить';
+        closeApp('settings-app');
+      }, 1500);
+    }
+
+    window.togglePanel = function(id, state) {
+      const panel = document.getElementById(id);
+      if(state) panel.classList.add('open');
+      else panel.classList.remove('open');
+    }
+
+    window.openSearch = function() {
+      openApp('search-modal');
+    }
+    window.searchBrowser = function() {
+      document.getElementById('browser-result').style.display = 'block';
+    }
+
+    let activeInput = null;
+    window.showKeyboard = function(input) {
+      activeInput = input;
+      document.getElementById('keyboard').classList.add('open');
+    }
+    window.hideKeyboard = function() {
+      document.getElementById('keyboard').classList.remove('open');
+      activeInput = null;
+    }
+    window.kbPress = function(char) {
+      if (!activeInput) return;
+      if (char === 'Backspace') {
+        activeInput.value = activeInput.value.slice(0, -1);
+      } else {
+        activeInput.value += char;
+      }
+    }
+
+    window.saveNote = function() {
+      const input = document.getElementById('note-input');
+      if (!input.value.trim()) return;
+      const div = document.createElement('div');
+      div.className = 'note-item';
+      const textSpan = document.createElement('span');
+      textSpan.innerText = input.value;
+      const delBtn = document.createElement('span');
+      delBtn.style.color = 'var(--muted)';
+      delBtn.style.cursor = 'pointer';
+      delBtn.innerText = '✕';
+      delBtn.onclick = function() { this.parentElement.remove(); };
+      
+      div.appendChild(textSpan);
+      div.appendChild(delBtn);
+      
+      document.getElementById('note-list').appendChild(div);
+      input.value = '';
+      hideKeyboard();
+    }
+
+    let calcStr = '';
+    window.calcInput = function(char) {
+      const display = document.getElementById('calc-display');
+      if (char === 'C') {
+        calcStr = '';
+        display.innerText = '0';
+      } else if (char === '=') {
+        try {
+          const result = Function('"use strict";return (' + calcStr + ')')();
+          calcStr = String(result);
+          display.innerText = calcStr;
+        } catch {
+          display.innerText = 'Ошибка';
+          calcStr = '';
+        }
+      } else {
+        calcStr += char;
+        display.innerText = calcStr;
+      }
+    }
+
+  });
+</script>
+</body>
+</html>
